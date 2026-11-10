@@ -1,0 +1,3055 @@
+{
+  "meta": {
+    "created": "2026-11-10T17:16:14+00:00",
+    "n": 1000,
+    "seeds": {
+      "seed": 13,
+      "split": "rng_for(seed, 'split', repeat)",
+      "repeats": 200
+    },
+    "models": {
+      "llm": "claude-haiku-5-5",
+      "llm_effort": "low",
+      "retriever": "hybrid-ft",
+      "nli": "MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli",
+      "confidence": "logistic:deploy",
+      "calibrator": "platt"
+    },
+    "config": {
+      "root": ".",
+      "data_dir": "data",
+      "artifacts_dir": "artifacts",
+      "results_dir": "results",
+      "anthropic_base_url": "https://api.anthropic.com",
+      "llm_model": "claude-haiku-5-5",
+      "llm_effort": "low",
+      "budget_usd": 15.0,
+      "llm_concurrency": 8,
+      "base_encoder": "sentence-transformers/all-MiniLM-L6-v2",
+      "biomed_encoder": "NeuML/pubmedbert-base-embeddings",
+      "finetuned_encoder_dir": "artifacts/encoder-ft",
+      "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+      "nli_model": "MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli",
+      "rrf_k": 60,
+      "top_k": 5,
+      "candidate_k": 50,
+      "default_retriever": "hybrid-ft",
+      "chat_corpus": "kb",
+      "alpha": 0.1,
+      "delta": 0.1,
+      "self_consistency_samples": 5,
+      "seed": 13
+    },
+    "data_manifests": {
+      "pubmedqa": {
+        "corpus": "pubmedqa",
+        "n_passages": 62249,
+        "n_labeled": 1000,
+        "n_distractors": 61249,
+        "label_distribution": {
+          "yes": 552,
+          "no": 338,
+          "maybe": 110
+        },
+        "params": {
+          "max_distractors": null,
+          "seed": 13
+        },
+        "sources": {
+          "repo": "qiaojin/PubMedQA",
+          "revision": "9001f2853fb87cab8d220904e0de81ac6973b318",
+          "files": [
+            "pqa_labeled/train-00000-of-00001.parquet",
+            "pqa_unlabeled/train-00000-of-00001.parquet"
+          ]
+        }
+      }
+    },
+    "source": "pubmedqa_runs.json, condition rag",
+    "delta": 0.1,
+    "alphas": [
+      0.05,
+      0.1,
+      0.15,
+      0.2
+    ],
+    "n_correct": 697,
+    "accuracy": 0.697,
+    "n_failed_excluded": 0,
+    "split_fractions": {
+      "train": 0.4,
+      "calibration": 0.3,
+      "test": 0.3
+    },
+    "n_cal": 300,
+    "n_grid": 100,
+    "min_selected": {
+      "fraction_of_n_cal": 0.1,
+      "value": 30
+    },
+    "calibrator_fitting": "cross-fitted on the training split (5 folds); never on calibration rows",
+    "guarantee": "For new questions drawn i.i.d. from the calibration distribution (PubMedQA expert-labelled questions) and answered by the same pipeline, P(selective risk <= alpha) >= 1 - delta over the draw of the calibration set, under the monotone-risk condition stated in primum.uncertainty.conformal. For the deployed bundle the PubMedQA questions it covers are its held-out rows only; the rest were fitted or certified on. For free-form chat questions the threshold is an operating point, not a guarantee.",
+    "intervals": {
+      "violation_ci": "95% Clopper-Pearson over repeats (split Monte-Carlo error)",
+      "coverage, risk, threshold, set metrics": "mean over repeats and central 95% range of the per-repeat values"
+    }
+  },
+  "selective": {
+    "certified": {
+      "0.05": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.10": {
+        "violation_rate": 0.015,
+        "violation_ci": [
+          0.00310410762155351,
+          0.0432082819177126
+        ],
+        "coverage": {
+          "mean": 0.00255,
+          "ci": [
+            0.0,
+            0.0024166666666672163
+          ]
+        },
+        "risk": {
+          "mean": 0.1253754171301446,
+          "ci": [
+            0.03728448275862069,
+            0.2611790878754171
+          ]
+        },
+        "certified_rate": 0.025,
+        "threshold": {
+          "mean": 0.8703330303957438,
+          "ci": [
+            0.8645641479084529,
+            0.8762939470381692
+          ]
+        },
+        "n_repeats": 200
+      },
+      "0.15": {
+        "violation_rate": 0.045,
+        "violation_ci": [
+          0.020780422227004356,
+          0.08370268807585404
+        ],
+        "coverage": {
+          "mean": 0.034583333333333334,
+          "ci": [
+            0.0,
+            0.32700000000000007
+          ]
+        },
+        "risk": {
+          "mean": 0.11640985254510021,
+          "ci": [
+            0.04131944444444444,
+            0.19633995037220828
+          ]
+        },
+        "certified_rate": 0.19,
+        "threshold": {
+          "mean": 0.8497526915615765,
+          "ci": [
+            0.7601613203092528,
+            0.9104287952215225
+          ]
+        },
+        "n_repeats": 200
+      },
+      "0.20": {
+        "violation_rate": 0.035,
+        "violation_ci": [
+          0.014185525898419248,
+          0.0707809983509772
+        ],
+        "coverage": {
+          "mean": 0.1581,
+          "ci": [
+            0.0,
+            0.6466666666666666
+          ]
+        },
+        "risk": {
+          "mean": 0.14366588322150958,
+          "ci": [
+            0.05559523809523809,
+            0.21130670103092783
+          ]
+        },
+        "certified_rate": 0.41,
+        "threshold": {
+          "mean": 0.7728279585486649,
+          "ci": [
+            0.6370304960087931,
+            0.9001621183059831
+          ]
+        },
+        "n_repeats": 200
+      }
+    },
+    "certified_hb": {
+      "0.05": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.10": {
+        "violation_rate": 0.015,
+        "violation_ci": [
+          0.00310410762155351,
+          0.0432082819177126
+        ],
+        "coverage": {
+          "mean": 0.00255,
+          "ci": [
+            0.0,
+            0.0024166666666672163
+          ]
+        },
+        "risk": {
+          "mean": 0.1253754171301446,
+          "ci": [
+            0.03728448275862069,
+            0.2611790878754171
+          ]
+        },
+        "certified_rate": 0.025,
+        "threshold": {
+          "mean": 0.8703330303957438,
+          "ci": [
+            0.8645641479084529,
+            0.8762939470381692
+          ]
+        },
+        "n_repeats": 200
+      },
+      "0.15": {
+        "violation_rate": 0.005,
+        "violation_ci": [
+          0.00012658102786701836,
+          0.02754189845720562
+        ],
+        "coverage": {
+          "mean": 0.0029833333333333335,
+          "ci": [
+            0.0,
+            0.0026666666666672733
+          ]
+        },
+        "risk": {
+          "mean": 0.11622174372174372,
+          "ci": [
+            0.06482142857142857,
+            0.2108108108108108
+          ]
+        },
+        "certified_rate": 0.025,
+        "threshold": {
+          "mean": 0.8651208786599971,
+          "ci": [
+            0.8580423674048707,
+            0.8690349610793349
+          ]
+        },
+        "n_repeats": 200
+      },
+      "0.20": {
+        "violation_rate": 0.01,
+        "violation_ci": [
+          0.0012133490137360308,
+          0.035654668397239776
+        ],
+        "coverage": {
+          "mean": 0.05873333333333333,
+          "ci": [
+            0.0,
+            0.5500833333333334
+          ]
+        },
+        "risk": {
+          "mean": 0.13584205495501894,
+          "ci": [
+            0.05128205128205128,
+            0.20427226226458958
+          ]
+        },
+        "certified_rate": 0.19,
+        "threshold": {
+          "mean": 0.7990282710580029,
+          "ci": [
+            0.6741956928473978,
+            0.9051242969354891
+          ]
+        },
+        "n_repeats": 200
+      }
+    },
+    "plug_in": {
+      "0.05": {
+        "violation_rate": 0.6,
+        "violation_ci": [
+          0.528535672797046,
+          0.6684537362643604
+        ],
+        "coverage": {
+          "mean": 0.06931666666666667,
+          "ci": [
+            0.0,
+            0.22008333333333335
+          ]
+        },
+        "risk": {
+          "mean": 0.08911457380831751,
+          "ci": [
+            0.0,
+            0.2616071428571424
+          ]
+        },
+        "certified_rate": 0.975,
+        "threshold": {
+          "mean": 0.9032085148036872,
+          "ci": [
+            0.8272526806928955,
+            0.963496198267823
+          ]
+        },
+        "n_repeats": 200
+      },
+      "0.10": {
+        "violation_rate": 0.61,
+        "violation_ci": [
+          0.5386787674550014,
+          0.6780089378847592
+        ],
+        "coverage": {
+          "mean": 0.2066166666666667,
+          "ci": [
+            0.006666666666666667,
+            0.4772500000000002
+          ]
+        },
+        "risk": {
+          "mean": 0.11362616653547292,
+          "ci": [
+            0.0,
+            0.20499999999999974
+          ]
+        },
+        "certified_rate": 0.99,
+        "threshold": {
+          "mean": 0.852620566507911,
+          "ci": [
+            0.731059904256295,
+            0.9471705812399644
+          ]
+        },
+        "n_repeats": 200
+      },
+      "0.15": {
+        "violation_rate": 0.535,
+        "violation_ci": [
+          0.4632998577883212,
+          0.6056472647385429
+        ],
+        "coverage": {
+          "mean": 0.48806666666666665,
+          "ci": [
+            0.11608333333333334,
+            0.6333333333333333
+          ]
+        },
+        "risk": {
+          "mean": 0.15129830850284778,
+          "ci": [
+            0.07586440677966103,
+            0.2053947368421053
+          ]
+        },
+        "certified_rate": 1.0,
+        "threshold": {
+          "mean": 0.7343817080042513,
+          "ci": [
+            0.6634609335329559,
+            0.8866231041996717
+          ]
+        },
+        "n_repeats": 200
+      },
+      "0.20": {
+        "violation_rate": 0.515,
+        "violation_ci": [
+          0.4434636357492163,
+          0.5860851703849562
+        ],
+        "coverage": {
+          "mean": 0.6814666666666668,
+          "ci": [
+            0.5466666666666666,
+            0.79
+          ]
+        },
+        "risk": {
+          "mean": 0.19995988047401425,
+          "ci": [
+            0.15417175417175416,
+            0.24666650419185027
+          ]
+        },
+        "certified_rate": 1.0,
+        "threshold": {
+          "mean": 0.6233993621536676,
+          "ci": [
+            0.5666621452854262,
+            0.6919180265979634
+          ]
+        },
+        "n_repeats": 200
+      }
+    }
+  },
+  "single_signal": {
+    "signal:ret_top": {
+      "0.05": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.10": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.15": {
+        "violation_rate": 0.005,
+        "violation_ci": [
+          0.00012658102786701836,
+          0.02754189845720562
+        ],
+        "coverage": {
+          "mean": 0.0007000000000000001,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": {
+          "mean": 0.2857142857142857,
+          "ci": [
+            0.2857142857142857,
+            0.2857142857142857
+          ]
+        },
+        "certified_rate": 0.005,
+        "threshold": {
+          "mean": 0.700322593430201,
+          "ci": [
+            0.700322593430201,
+            0.700322593430201
+          ]
+        },
+        "n_repeats": 200
+      },
+      "0.20": {
+        "violation_rate": 0.015,
+        "violation_ci": [
+          0.00310410762155351,
+          0.0432082819177126
+        ],
+        "coverage": {
+          "mean": 0.0022833333333333334,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": {
+          "mean": 0.2698661028893587,
+          "ci": [
+            0.2299090909090909,
+            0.30120930232558135
+          ]
+        },
+        "certified_rate": 0.015,
+        "threshold": {
+          "mean": 0.7224017356827099,
+          "ci": [
+            0.7012233008023004,
+            0.7448562592285044
+          ]
+        },
+        "n_repeats": 200
+      }
+    },
+    "signal:ret_mean": {
+      "0.05": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.10": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.15": {
+        "violation_rate": 0.005,
+        "violation_ci": [
+          0.00012658102786701836,
+          0.02754189845720562
+        ],
+        "coverage": {
+          "mean": 0.0003166666666666667,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": {
+          "mean": 0.3157894736842105,
+          "ci": [
+            0.3157894736842105,
+            0.3157894736842105
+          ]
+        },
+        "certified_rate": 0.005,
+        "threshold": {
+          "mean": 0.713144446850352,
+          "ci": [
+            0.713144446850352,
+            0.713144446850352
+          ]
+        },
+        "n_repeats": 200
+      },
+      "0.20": {
+        "violation_rate": 0.005,
+        "violation_ci": [
+          0.00012658102786701836,
+          0.02754189845720562
+        ],
+        "coverage": {
+          "mean": 0.0004,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": {
+          "mean": 0.2916666666666667,
+          "ci": [
+            0.2916666666666667,
+            0.2916666666666667
+          ]
+        },
+        "certified_rate": 0.005,
+        "threshold": {
+          "mean": 0.7110177994008913,
+          "ci": [
+            0.7110177994008913,
+            0.7110177994008913
+          ]
+        },
+        "n_repeats": 200
+      }
+    },
+    "signal:ret_margin": {
+      "0.05": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.10": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.15": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.20": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      }
+    },
+    "signal:ret_agree": {
+      "0.05": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.10": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.15": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.20": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      }
+    },
+    "signal:nli_mean_entail": {
+      "0.05": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.10": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.15": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.20": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      }
+    },
+    "signal:nli_min_entail": {
+      "0.05": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.10": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.15": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.20": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      }
+    },
+    "signal:nli_max_contra": {
+      "0.05": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.10": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.15": {
+        "violation_rate": 0.02,
+        "violation_ci": [
+          0.005475565879556452,
+          0.0504136090898963
+        ],
+        "coverage": {
+          "mean": 0.0030499999999999998,
+          "ci": [
+            0.0,
+            0.0737500000000001
+          ]
+        },
+        "risk": {
+          "mean": 0.16380652402157778,
+          "ci": [
+            0.07083333333333333,
+            0.24053030303030304
+          ]
+        },
+        "certified_rate": 0.03,
+        "threshold": {
+          "mean": 0.7322809934601944,
+          "ci": [
+            0.7104730630963507,
+            0.7505629034788657
+          ]
+        },
+        "n_repeats": 200
+      },
+      "0.20": {
+        "violation_rate": 0.045,
+        "violation_ci": [
+          0.020780422227004356,
+          0.08370268807585404
+        ],
+        "coverage": {
+          "mean": 0.0149,
+          "ci": [
+            0.0,
+            0.15683333333333338
+          ]
+        },
+        "risk": {
+          "mean": 0.1896117174212827,
+          "ci": [
+            0.0683794466403162,
+            0.30056568196103073
+          ]
+        },
+        "certified_rate": 0.11,
+        "threshold": {
+          "mean": 0.7456573213334575,
+          "ci": [
+            0.7098772394500724,
+            0.7726954858480791
+          ]
+        },
+        "n_repeats": 200
+      }
+    },
+    "signal:frac_supported": {
+      "0.05": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.10": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.15": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.20": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      }
+    },
+    "signal:n_claims": {
+      "0.05": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.10": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.15": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.20": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      }
+    },
+    "signal:verbal_conf": {
+      "0.05": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.10": {
+        "violation_rate": 0.02,
+        "violation_ci": [
+          0.005475565879556452,
+          0.0504136090898963
+        ],
+        "coverage": {
+          "mean": 0.005600000000000001,
+          "ci": [
+            0.0,
+            0.13091666666666688
+          ]
+        },
+        "risk": {
+          "mean": 0.1279091121230221,
+          "ci": [
+            0.07831564986737401,
+            0.2032051282051282
+          ]
+        },
+        "certified_rate": 0.035,
+        "threshold": {
+          "mean": 0.8577771567448736,
+          "ci": [
+            0.8415097913066758,
+            0.8977678079821523
+          ]
+        },
+        "n_repeats": 200
+      },
+      "0.15": {
+        "violation_rate": 0.055,
+        "violation_ci": [
+          0.02777225455200654,
+          0.09627764443391285
+        ],
+        "coverage": {
+          "mean": 0.06613333333333334,
+          "ci": [
+            0.0,
+            0.4266666666666667
+          ]
+        },
+        "risk": {
+          "mean": 0.11944637505807951,
+          "ci": [
+            0.055327442827442834,
+            0.18576388888888887
+          ]
+        },
+        "certified_rate": 0.275,
+        "threshold": {
+          "mean": 0.8480915300751339,
+          "ci": [
+            0.7657746550584216,
+            0.9021577508939292
+          ]
+        },
+        "n_repeats": 200
+      },
+      "0.20": {
+        "violation_rate": 0.015,
+        "violation_ci": [
+          0.00310410762155351,
+          0.0432082819177126
+        ],
+        "coverage": {
+          "mean": 0.31995,
+          "ci": [
+            0.0,
+            0.5700833333333333
+          ]
+        },
+        "risk": {
+          "mean": 0.14407065390925322,
+          "ci": [
+            0.042198581560283686,
+            0.2
+          ]
+        },
+        "certified_rate": 0.725,
+        "threshold": {
+          "mean": 0.7489514634142932,
+          "ci": [
+            0.6469000979461417,
+            0.9011580579002099
+          ]
+        },
+        "n_repeats": 200
+      }
+    }
+  },
+  "min_selected_sensitivity": {
+    "min_selected=5% of n_cal": {
+      "0.05": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.10": {
+        "violation_rate": 0.05,
+        "violation_ci": [
+          0.024234165472108556,
+          0.09002753770135137
+        ],
+        "coverage": {
+          "mean": 0.007983333333333334,
+          "ci": [
+            0.0,
+            0.10008333333333336
+          ]
+        },
+        "risk": {
+          "mean": 0.11173028113407672,
+          "ci": [
+            0.014655172413793105,
+            0.22662068965517235
+          ]
+        },
+        "certified_rate": 0.09,
+        "threshold": {
+          "mean": 0.8805182758373921,
+          "ci": [
+            0.8493970660199314,
+            0.9104785985006069
+          ]
+        },
+        "n_repeats": 200
+      },
+      "0.15": {
+        "violation_rate": 0.04,
+        "violation_ci": [
+          0.0174248089944806,
+          0.07729196822601608
+        ],
+        "coverage": {
+          "mean": 0.022133333333333335,
+          "ci": [
+            0.0,
+            0.2034166666666667
+          ]
+        },
+        "risk": {
+          "mean": 0.10593341411920153,
+          "ci": [
+            0.0,
+            0.1991935483870968
+          ]
+        },
+        "certified_rate": 0.23,
+        "threshold": {
+          "mean": 0.8883260939791937,
+          "ci": [
+            0.8227539317159024,
+            0.9333603555016003
+          ]
+        },
+        "n_repeats": 200
+      },
+      "0.20": {
+        "violation_rate": 0.01,
+        "violation_ci": [
+          0.0012133490137360308,
+          0.035654668397239776
+        ],
+        "coverage": {
+          "mean": 0.05758333333333333,
+          "ci": [
+            0.0,
+            0.5602500000000001
+          ]
+        },
+        "risk": {
+          "mean": 0.12096206231803572,
+          "ci": [
+            0.0,
+            0.20875
+          ]
+        },
+        "certified_rate": 0.23,
+        "threshold": {
+          "mean": 0.8323865369924571,
+          "ci": [
+            0.6583871229895218,
+            0.925630248604702
+          ]
+        },
+        "n_repeats": 200
+      }
+    },
+    "min_selected=10% of n_cal": {
+      "0.05": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.10": {
+        "violation_rate": 0.015,
+        "violation_ci": [
+          0.00310410762155351,
+          0.0432082819177126
+        ],
+        "coverage": {
+          "mean": 0.00255,
+          "ci": [
+            0.0,
+            0.0024166666666672163
+          ]
+        },
+        "risk": {
+          "mean": 0.1253754171301446,
+          "ci": [
+            0.03728448275862069,
+            0.2611790878754171
+          ]
+        },
+        "certified_rate": 0.025,
+        "threshold": {
+          "mean": 0.8703330303957438,
+          "ci": [
+            0.8645641479084529,
+            0.8762939470381692
+          ]
+        },
+        "n_repeats": 200
+      },
+      "0.15": {
+        "violation_rate": 0.045,
+        "violation_ci": [
+          0.020780422227004356,
+          0.08370268807585404
+        ],
+        "coverage": {
+          "mean": 0.034583333333333334,
+          "ci": [
+            0.0,
+            0.32700000000000007
+          ]
+        },
+        "risk": {
+          "mean": 0.11640985254510021,
+          "ci": [
+            0.04131944444444444,
+            0.19633995037220828
+          ]
+        },
+        "certified_rate": 0.19,
+        "threshold": {
+          "mean": 0.8497526915615765,
+          "ci": [
+            0.7601613203092528,
+            0.9104287952215225
+          ]
+        },
+        "n_repeats": 200
+      },
+      "0.20": {
+        "violation_rate": 0.035,
+        "violation_ci": [
+          0.014185525898419248,
+          0.0707809983509772
+        ],
+        "coverage": {
+          "mean": 0.1581,
+          "ci": [
+            0.0,
+            0.6466666666666666
+          ]
+        },
+        "risk": {
+          "mean": 0.14366588322150958,
+          "ci": [
+            0.05559523809523809,
+            0.21130670103092783
+          ]
+        },
+        "certified_rate": 0.41,
+        "threshold": {
+          "mean": 0.7728279585486649,
+          "ci": [
+            0.6370304960087931,
+            0.9001621183059831
+          ]
+        },
+        "n_repeats": 200
+      }
+    },
+    "min_selected=20% of n_cal": {
+      "0.05": {
+        "violation_rate": 0.0,
+        "violation_ci": [
+          0.0,
+          0.01827534035513624
+        ],
+        "coverage": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": null,
+        "certified_rate": 0.0,
+        "threshold": null,
+        "n_repeats": 200
+      },
+      "0.10": {
+        "violation_rate": 0.01,
+        "violation_ci": [
+          0.0012133490137360308,
+          0.035654668397239776
+        ],
+        "coverage": {
+          "mean": 0.0020166666666666666,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "risk": {
+          "mean": 0.19024122807017543,
+          "ci": [
+            0.18763706140350878,
+            0.1928453947368421
+          ]
+        },
+        "certified_rate": 0.01,
+        "threshold": {
+          "mean": 0.8596386094991165,
+          "ci": [
+            0.8552542371076352,
+            0.8640229818905979
+          ]
+        },
+        "n_repeats": 200
+      },
+      "0.15": {
+        "violation_rate": 0.075,
+        "violation_ci": [
+          0.04258280373709265,
+          0.1206842253996613
+        ],
+        "coverage": {
+          "mean": 0.07243333333333332,
+          "ci": [
+            0.0,
+            0.45725000000000016
+          ]
+        },
+        "risk": {
+          "mean": 0.1312797992701855,
+          "ci": [
+            0.07293233082706767,
+            0.19532163742690054
+          ]
+        },
+        "certified_rate": 0.245,
+        "threshold": {
+          "mean": 0.8162275358550602,
+          "ci": [
+            0.7053543593476976,
+            0.8733666211990481
+          ]
+        },
+        "n_repeats": 200
+      },
+      "0.20": {
+        "violation_rate": 0.06,
+        "violation_ci": [
+          0.031383953893483446,
+          0.1024618313083245
+        ],
+        "coverage": {
+          "mean": 0.2826,
+          "ci": [
+            0.0,
+            0.6534166666666666
+          ]
+        },
+        "risk": {
+          "mean": 0.1541933504293793,
+          "ci": [
+            0.06746343445287108,
+            0.21127319587628865
+          ]
+        },
+        "certified_rate": 0.615,
+        "threshold": {
+          "mean": 0.7427036175850945,
+          "ci": [
+            0.6467061378957122,
+            0.8691208689770995
+          ]
+        },
+        "n_repeats": 200
+      }
+    }
+  },
+  "prediction_sets": {
+    "lac": {
+      "set_coverage": {
+        "0.05": {
+          "mean": 0.9637666666666667,
+          "ci": [
+            0.92,
+            0.9833333333333333
+          ]
+        },
+        "0.10": {
+          "mean": 0.9093166666666666,
+          "ci": [
+            0.8766666666666667,
+            0.9433333333333334
+          ]
+        },
+        "0.15": {
+          "mean": 0.8983333333333334,
+          "ci": [
+            0.87325,
+            0.9266666666666666
+          ]
+        },
+        "0.20": {
+          "mean": 0.8153666666666666,
+          "ci": [
+            0.7733333333333333,
+            0.9000833333333333
+          ]
+        }
+      },
+      "mean_set_size": {
+        "0.05": {
+          "mean": 2.4212333333333333,
+          "ci": [
+            2.1166666666666667,
+            2.5300833333333332
+          ]
+        },
+        "0.10": {
+          "mean": 1.9164166666666669,
+          "ci": [
+            1.7599166666666666,
+            2.100166666666667
+          ]
+        },
+        "0.15": {
+          "mean": 1.8164166666666666,
+          "ci": [
+            1.7530833333333333,
+            1.89025
+          ]
+        },
+        "0.20": {
+          "mean": 1.4893,
+          "ci": [
+            1.3432499999999998,
+            1.8005833333333334
+          ]
+        }
+      },
+      "empty_set_rate": {
+        "0.05": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "0.10": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "0.15": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "0.20": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "aps": {
+      "set_coverage": {
+        "0.05": {
+          "mean": 0.94935,
+          "ci": [
+            0.9133333333333333,
+            0.9766666666666667
+          ]
+        },
+        "0.10": {
+          "mean": 0.8987666666666666,
+          "ci": [
+            0.8533333333333334,
+            0.9366666666666666
+          ]
+        },
+        "0.15": {
+          "mean": 0.8521166666666666,
+          "ci": [
+            0.8,
+            0.9
+          ]
+        },
+        "0.20": {
+          "mean": 0.8004500000000001,
+          "ci": [
+            0.7566666666666667,
+            0.8500833333333333
+          ]
+        }
+      },
+      "mean_set_size": {
+        "0.05": {
+          "mean": 2.4585333333333335,
+          "ci": [
+            2.243333333333333,
+            2.6600833333333336
+          ]
+        },
+        "0.10": {
+          "mean": 2.059833333333333,
+          "ci": [
+            1.8832499999999999,
+            2.2535000000000003
+          ]
+        },
+        "0.15": {
+          "mean": 1.7462833333333334,
+          "ci": [
+            1.5498333333333334,
+            1.9300833333333334
+          ]
+        },
+        "0.20": {
+          "mean": 1.4973666666666667,
+          "ci": [
+            1.3959166666666667,
+            1.64
+          ]
+        }
+      },
+      "empty_set_rate": {
+        "0.05": {
+          "mean": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        "0.10": {
+          "mean": 0.0005666666666666667,
+          "ci": [
+            0.0,
+            0.003416666666666686
+          ]
+        },
+        "0.15": {
+          "mean": 0.004266666666666667,
+          "ci": [
+            0.0,
+            0.016666666666666666
+          ]
+        },
+        "0.20": {
+          "mean": 0.014750000000000001,
+          "ci": [
+            0.0,
+            0.033416666666666685
+          ]
+        }
+      }
+    }
+  },
+  "calibration": {
+    "p_correct": [
+      0.5844752506609141,
+      0.5448584803509141,
+      0.89032643338868,
+      0.7860884275512561,
+      0.8118414253511308,
+      0.6313134787140974,
+      0.9031278725066338,
+      0.8704069560029128,
+      0.6107147783294675,
+      0.7531423675413109,
+      0.5677797334188518,
+      0.5630272359014123,
+      0.7960381300896974,
+      0.6142404897235101,
+      0.728768885161993,
+      0.771895233269447,
+      0.5013618104983909,
+      0.871675366046709,
+      0.8900417846223538,
+      0.570518978244543,
+      0.3607093741528074,
+      0.6499060177861621,
+      0.3866329945135101,
+      0.7469218347431716,
+      0.7556722340223392,
+      0.8573170983870038,
+      0.5605560628058522,
+      0.8513888531521373,
+      0.436263798204693,
+      0.8580161184858999,
+      0.8536472647925075,
+      0.7109162230751901,
+      0.5166020797250839,
+      0.8153869888213217,
+      0.664771566853393,
+      0.8960485998739464,
+      0.5198669837895648,
+      0.9452871914718809,
+      0.6263385966496968,
+      0.5506812529186504,
+      0.39576862088554504,
+      0.5727639573908648,
+      0.6046172409138335,
+      0.9041624110730718,
+      0.5400876342339445,
+      0.7716072442188269,
+      0.89668581874118,
+      0.8716622100925845,
+      0.8742060039974465,
+      0.5292261267775338,
+      0.5937166791222535,
+      0.7627031871019637,
+      0.4877043764521769,
+      0.8901507909678781,
+      0.7454211003715111,
+      0.790182871653982,
+      0.6952589245221326,
+      0.8427732541241787,
+      0.5294063054602917,
+      0.5413318168917699,
+      0.831109916419345,
+      0.8882839575918274,
+      0.8434742666937415,
+      0.4407948885603862,
+      0.8920420751778748,
+      0.7643659149232955,
+      0.906220461079339,
+      0.33985036462773227,
+      0.7224112544556156,
+      0.5783997678278019,
+      0.8158303511758299,
+      0.46195515136113424,
+      0.8481462333722479,
+      0.8428049163133815,
+      0.6780818392033747,
+      0.459234512932057,
+      0.7469062966205514,
+      0.8022242216399902,
+      0.8813031683502208,
+      0.46616655475550184,
+      0.8542418558821233,
+      0.6394033242136534,
+      0.45558915751891504,
+      0.8388530910232073,
+      0.6783539015402655,
+      0.8568089752383035,
+      0.3322638418101275,
+      0.351029161525126,
+      0.8849827769600156,
+      0.44540107687083963,
+      0.858708772188203,
+      0.5939997670163331,
+      0.5678222047643116,
+      0.45378333051955677,
+      0.8068935413618115,
+      0.6682914669989123,
+      0.8227398296438553,
+      0.8696259674364109,
+      0.33936019499870784,
+      0.5208004524659525,
+      0.6589855796108153,
+      0.3755547704872241,
+      0.4700347768617338,
+      0.876437515003726,
+      0.9464200373759436,
+      0.7920513508327113,
+      0.484464074221695,
+      0.4237965759112734,
+      0.7949516211480256,
+      0.4977419433743222,
+      0.6577786515465431,
+      0.6647685016359715,
+      0.8364167114737641,
+      0.526654439072089,
+      0.38063881582822334,
+      0.9032997472477042,
+      0.757305685603571,
+      0.5630642922465051,
+      0.6094724860632674,
+      0.8956973938972345,
+      0.8238424800144658,
+      0.49327516955238265,
+      0.8982195433407976,
+      0.7672869462053274,
+      0.35171877742820395,
+      0.7780103281447661,
+      0.8751791812978252,
+      0.4704058660166476,
+      0.42711203110201196,
+      0.8442907145479264,
+      0.8515367395552856,
+      0.8399195101187277,
+      0.679261658252131,
+      0.7826726689495771,
+      0.8479205084322767,
+      0.9188350191399225,
+      0.811041366510124,
+      0.7839766097906885,
+      0.3989150250968942,
+      0.9270059771416783,
+      0.6790634258275967,
+      0.8124386426477618,
+      0.8541803029581844,
+      0.8247752844893361,
+      0.8566598965810671,
+      0.7363799000577075,
+      0.6071456869388547,
+      0.37706278689297357,
+      0.7925093324482685,
+      0.8230052649507359,
+      0.4095017692758375,
+      0.7245724457873457,
+      0.6704935870274066,
+      0.820679686155484,
+      0.7110067611414633,
+      0.515799792111598,
+      0.6759931062587716,
+      0.6686447550261667,
+      0.8586337410483592,
+      0.6510174691462244,
+      0.7859057603905478,
+      0.9136020461395292,
+      0.7835523799764518,
+      0.8577642299307507,
+      0.5677051976021932,
+      0.7851004750400373,
+      0.44707641851884017,
+      0.5695895427858443,
+      0.7472737097005193,
+      0.9057323607773063,
+      0.8296283064555103,
+      0.8709826030282393,
+      0.7996301109768573,
+      0.8164844437689425,
+      0.2939138402226389,
+      0.7203475146866983,
+      0.3994103021121994,
+      0.7364852337053913,
+      0.6098582832551729,
+      0.8454967685034112,
+      0.8487493656889086,
+      0.8611991009795308,
+      0.8437504929352769,
+      0.7646651061771292,
+      0.5500386811823137,
+      0.7766681113672546,
+      0.9009189538201289,
+      0.9312734512644907,
+      0.6832157255977908,
+      0.8468839169156239,
+      0.753053282944783,
+      0.8487168728232771,
+      0.5708391762514687,
+      0.8699810429570561,
+      0.4829594575418432,
+      0.8407801085005213,
+      0.46483213714848953,
+      0.8783648652823068,
+      0.548850373857687,
+      0.5930917437936314,
+      0.7155996068879962,
+      0.7492075956794606,
+      0.89353840969602,
+      0.8808770601281247,
+      0.388123491871412,
+      0.8985312063206364,
+      0.8722176876438215,
+      0.3936127316742829,
+      0.8215969624825694,
+      0.8869773252839697,
+      0.8741513885408996,
+      0.8470670694594067,
+      0.5876125896252299,
+      0.8042299667815371,
+      0.9087198846006846,
+      0.35631041443877404,
+      0.7907329440047124,
+      0.6626426194879318,
+      0.8135227519405619,
+      0.6543069106747306,
+      0.6791807861454818,
+      0.4625816647058645,
+      0.729294898677097,
+      0.544330849607635,
+      0.7859376972895117,
+      0.8162590732442133,
+      0.8717243491470779,
+      0.6303068687166336,
+      0.642935462213175,
+      0.6519630907623689,
+      0.5803948626560315,
+      0.5852577232837858,
+      0.7969315148460383,
+      0.70482280924045,
+      0.8893520224716605,
+      0.7132821791792175,
+      0.882367221675591,
+      0.889405181970131,
+      0.6789937259549027,
+      0.8667988003510859,
+      0.6132203106061023,
+      0.6498548169434578,
+      0.5014714690874945,
+      0.8491099491519045,
+      0.8966295099578303,
+      0.8612579452936661,
+      0.818706550828119,
+      0.8808426758468727,
+      0.7591579678337064,
+      0.8091649217482565,
+      0.6315154538445537,
+      0.8463964665270511,
+      0.8683769431577412,
+      0.7024890097440402,
+      0.850864650340208,
+      0.6771035109949544,
+      0.8990575979390945,
+      0.3061631082695038,
+      0.8884301393389883,
+      0.5276619929058824,
+      0.7834168762167998,
+      0.6479809127500332,
+      0.767671760881794,
+      0.2980248761676823,
+      0.4439969704004618,
+      0.8443459536136189,
+      0.5958486708074573,
+      0.7050900439826595,
+      0.5899393232172208,
+      0.6133719569328437,
+      0.9241512451745312,
+      0.6193089507247007,
+      0.9072031492166256,
+      0.6374871086247823,
+      0.5817189729630952,
+      0.882108719063361,
+      0.6267826087581813,
+      0.50548987000222,
+      0.7362840560582472,
+      0.4073927030458346,
+      0.8350884090051574,
+      0.5406908936930589,
+      0.8291562930471137,
+      0.5920859077136913,
+      0.6470932624136593,
+      0.606707730363106,
+      0.6687652938427749,
+      0.6435752966662298,
+      0.5506422376249589,
+      0.6303737734327225,
+      0.7511114212063608,
+      0.874630912953762,
+      0.8480096532383384,
+      0.38822604273152456,
+      0.5933209067342049,
+      0.7550460188506094,
+      0.8750719325028511,
+      0.5819777494613455,
+      0.6216441906494596,
+      0.6198915309802582
+    ],
+    "correct": [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      0,
+      1
+    ],
+    "thresholds": {
+      "0.05": null,
+      "0.10": 0.8750719325028511,
+      "0.15": 0.8487493656889086,
+      "0.20": 0.7362840560582472
+    },
+    "delta": 0.1,
+    "n_grid": 100,
+    "min_selected": 30,
+    "heldout": {
+      "p_correct": [
+        0.5477075791267472,
+        0.8940202504789596,
+        0.8568181210245184,
+        0.8472457168794536,
+        0.8624304230703458,
+        0.889368070016771,
+        0.8736457715812206,
+        0.6733493294332126,
+        0.41522434282103965,
+        0.48970059025528884,
+        0.8406912500849952,
+        0.44826704632773967,
+        0.4787418962678325,
+        0.8613807009404962,
+        0.5192576017221044,
+        0.7025892012891788,
+        0.7271142436608348,
+        0.8291303659462333,
+        0.8025298515632873,
+        0.7985180908275692,
+        0.6182732601203407,
+        0.7554591297583758,
+        0.5096427301365603,
+        0.6960808451121058,
+        0.8095122216448418,
+        0.6319198044336951,
+        0.3310173657133205,
+        0.9187916667271178,
+        0.6298650650138211,
+        0.9225260625782146,
+        0.6020202940457379,
+        0.8015712863360596,
+        0.891707536602976,
+        0.7270876681849037,
+        0.8651779279000542,
+        0.5111345102816645,
+        0.6431877498729459,
+        0.7573051736746146,
+        0.59526956092809,
+        0.8144791272901352,
+        0.7964277235090333,
+        0.7880725588436417,
+        0.9219599126172443,
+        0.5978339812583218,
+        0.6719985253286338,
+        0.8185572568064242,
+        0.8761749282671233,
+        0.8119178366394656,
+        0.930979460807626,
+        0.6553676088055838,
+        0.8713912034276016,
+        0.8422465453084367,
+        0.6306657906525308,
+        0.45299320293585993,
+        0.6740927451515846,
+        0.6297370197975755,
+        0.9221499421919996,
+        0.5791895411809791,
+        0.6642580020020534,
+        0.7836189462195409,
+        0.8129110529119727,
+        0.7614316619199071,
+        0.6671534136247737,
+        0.8608943774910982,
+        0.9084875896175203,
+        0.687846896797274,
+        0.8457828558695829,
+        0.86080987837399,
+        0.9222725932696616,
+        0.5886628684551071,
+        0.6898089550076957,
+        0.8181033459449968,
+        0.4951757196240895,
+        0.7111947326912106,
+        0.8071291334804842,
+        0.8445072202889283,
+        0.6187941881123548,
+        0.8189723967270028,
+        0.9265509870417195,
+        0.7746843344599699,
+        0.8452077362923457,
+        0.4325379031057401,
+        0.7469030897525948,
+        0.2895259528226831,
+        0.6615711738869626,
+        0.708155394939852,
+        0.4158845231412938,
+        0.8012323973127466,
+        0.3926474645881779,
+        0.6188602331788738,
+        0.7490138117839387,
+        0.6040505259037005,
+        0.9026315999576681,
+        0.6624784774868487,
+        0.39561741603000095,
+        0.5243393230118384,
+        0.8610809600194941,
+        0.9296103465069954,
+        0.8184875200215243,
+        0.5750384469253326,
+        0.8600250882665693,
+        0.5209461225301302,
+        0.810950171769754,
+        0.5360547574939049,
+        0.8017029290111592,
+        0.30354894932012316,
+        0.7212851954250874,
+        0.342096427592639,
+        0.8027653198799926,
+        0.3440057790216428,
+        0.7980404175703474,
+        0.846064617463293,
+        0.7757148333283317,
+        0.4636757771241386,
+        0.6252785832165811,
+        0.8800390120003715,
+        0.4930582307756768,
+        0.9066051878943457,
+        0.5210147106998165,
+        0.68092566502169,
+        0.783396625376205,
+        0.7106646156284515,
+        0.43707673279851517,
+        0.8795857952027165,
+        0.6836046349131862,
+        0.4598424630156458,
+        0.863870268983966,
+        0.5051427540662674,
+        0.8407995771739292,
+        0.759914830503528,
+        0.46987529441525383,
+        0.8967926105253239,
+        0.3618145330428288,
+        0.7796047608808844,
+        0.862102731872434,
+        0.898050548834088,
+        0.6519276373699618,
+        0.4209744052036095,
+        0.5670064247418591,
+        0.43701323336252434,
+        0.4933232496788319,
+        0.6908183915861249,
+        0.4580047437228587,
+        0.8124864524421533,
+        0.7005716040092064,
+        0.622554261939677,
+        0.45047694204505717,
+        0.701295708371204,
+        0.6940338906501363,
+        0.8345616513021771,
+        0.8036594116012861,
+        0.8214089666055784,
+        0.8967523404187234,
+        0.6585240979002034,
+        0.7116378277602855,
+        0.7119086973520199,
+        0.8741228704591869,
+        0.6423091842395636,
+        0.8097878224975018,
+        0.6360751242493142,
+        0.44337544936544154,
+        0.9267016876236731,
+        0.8997750570532412,
+        0.6558610796496813,
+        0.5610610787429543,
+        0.7894561364212304,
+        0.8795737688291831,
+        0.8666069683213621,
+        0.7406215730834593,
+        0.3937916163629752,
+        0.5323817431448652,
+        0.7371044521943335,
+        0.4194129711885674,
+        0.7398592118784427,
+        0.6689747427975551,
+        0.8141674698399244,
+        0.5346167090724249,
+        0.5099952562596622,
+        0.6179223634120417,
+        0.5135606433275965,
+        0.6302973337739826,
+        0.8743525976019184,
+        0.6465790859263958,
+        0.8756713921861384,
+        0.5496940860243223,
+        0.8739564665918695,
+        0.6116075265797563,
+        0.5304168306181793,
+        0.8811699639135001,
+        0.8410500268502074,
+        0.5067123852350929,
+        0.44653179154436623,
+        0.7559614206469883,
+        0.7841983385968778,
+        0.39657611689405203,
+        0.6573316976666131,
+        0.8328680019877054,
+        0.8540730816559692,
+        0.8283152321111351,
+        0.8564055150614505,
+        0.6282644418030607,
+        0.5682652117426056,
+        0.6858047826849493,
+        0.6278310300401676,
+        0.3631758690692372,
+        0.8630240434429078,
+        0.591023912172682,
+        0.884354629849077,
+        0.8834994908304236,
+        0.7831155502453401,
+        0.6360544959997613,
+        0.5713690437404244,
+        0.5924110334526965,
+        0.8109728710763837,
+        0.49263883718780493,
+        0.8094760698287765,
+        0.48219077805962113,
+        0.6651043833491157,
+        0.88692345756304,
+        0.9049569423620838,
+        0.6839893759457957,
+        0.6196287773447698,
+        0.6561819184309268,
+        0.725633236927734,
+        0.7798510409491138,
+        0.8189634714024304,
+        0.7124873815151459,
+        0.572317096000047,
+        0.5011354279389624,
+        0.8945159324173891,
+        0.8358760686542193,
+        0.7926539559590537,
+        0.7074707965144806,
+        0.569895700431299,
+        0.8563778797099191,
+        0.4036183821556207,
+        0.3336632168219061,
+        0.7331303526744636,
+        0.9220794490891754,
+        0.762790445096531,
+        0.8164410389579546,
+        0.86848366394592,
+        0.8964724198682004,
+        0.5492978347995358,
+        0.6550227553531722,
+        0.7669204410827976,
+        0.8425408228644866,
+        0.9064772618855116,
+        0.44447531131566986,
+        0.7311795293050849,
+        0.4841695540454569,
+        0.3623442869764485,
+        0.7687826330836136,
+        0.7695747336283781,
+        0.7083764421665877,
+        0.7429840762070646,
+        0.7106326433633191,
+        0.8464790542684166,
+        0.8187601387895953,
+        0.7312880634248125,
+        0.4920466521679553,
+        0.8340450171300298,
+        0.811004797360153,
+        0.546170768977336,
+        0.7328847709376107,
+        0.8916096810670777,
+        0.4387624987715253,
+        0.9387166710187907,
+        0.426157062332538,
+        0.6508821165244982,
+        0.8165020188005677,
+        0.8656025330687759,
+        0.7146892464798549,
+        0.7210416163846632,
+        0.7315619318020439,
+        0.9087371299950633,
+        0.48613015237646995,
+        0.32478423796370703,
+        0.554519813724312,
+        0.8144251165330052,
+        0.5871323229763427,
+        0.42763129247624093,
+        0.6090684836162062,
+        0.8528729326850651,
+        0.7559169890170606,
+        0.8751659008674517,
+        0.567677856251123,
+        0.8599928558901972,
+        0.7449318667701372,
+        0.6398631474904607,
+        0.7294534901213688,
+        0.6626766503015725,
+        0.785154357581697,
+        0.8896754226879354,
+        0.7893038015861379,
+        0.4947730265249534,
+        0.6554906491394378,
+        0.8595302545090354,
+        0.7734666942175089,
+        0.7979230044152356
+      ],
+      "correct": [
+        1,
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        0,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    "source": "deployed model's calibrated P(correct). p_correct/correct: the calibration rows the deployed thresholds were certified on (in-sample for the threshold). heldout: rows never used to fit, calibrate or certify (out-of-sample)."
+  },
+  "deployment": {
+    "saved": true,
+    "n_train": 400,
+    "n_cal": 300,
+    "n_heldout": 300,
+    "features": [
+      "ret_top",
+      "ret_mean",
+      "ret_margin",
+      "ret_agree",
+      "nli_mean_entail",
+      "nli_min_entail",
+      "nli_max_contra",
+      "frac_supported",
+      "n_claims",
+      "verbal_conf"
+    ],
+    "thresholds": {
+      "0.05": null,
+      "0.10": 0.8750719325028511,
+      "0.15": 0.8487493656889086,
+      "0.20": 0.7362840560582472
+    }
+  }
+}

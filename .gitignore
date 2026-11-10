@@ -1,0 +1,24 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# data and model artefacts are rebuilt by `primum data ...` / `primum train ...`
+data/raw/
+data/processed/
+data/indexes/
+artifacts/
+legacy/vectorstore/
+*.sqlite
+*.sqlite-*
+
+# copyrighted source material must never be committed
+*.pdf
+
+# web
+web/node_modules/
+web/.next/
+web/out/
+.DS_Store

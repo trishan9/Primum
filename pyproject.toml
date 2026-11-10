@@ -1,0 +1,58 @@
+[project]
+name = "primum"
+version = "0.2.0"
+description = "Primum: selective, evidence-verified clinical question answering with distribution-free risk guarantees"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "anthropic>=1.0",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "sse-starlette>=2.1",
+    "pydantic>=2.8",
+    "pydantic-settings>=2.4",
+    "numpy>=2.0",
+    "scipy>=1.14",
+    "scikit-learn>=1.5",
+    "torch>=2.5",
+    "transformers>=4.46",
+    "sentence-transformers>=3.2",
+    "huggingface-hub>=0.26",
+    "pandas>=2.2",
+    "pyarrow>=17",
+    "httpx>=0.27",
+    "pypdf>=5.0",
+    "typer>=0.12",
+    "rich>=13.8",
+    "tqdm>=4.66",
+    "matplotlib>=3.9",
+]
+
+[project.scripts]
+primum = "primum.cli:app"
+
+[dependency-groups]
+dev = ["pytest>=8.3", "pytest-asyncio>=0.24", "ruff>=0.7"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/primum"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = ["slow: needs downloaded models or data", "llm: calls the Claude API"]
+addopts = "-m 'not slow and not llm'"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src"]
+extend-exclude = ["artifacts", "legacy"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]

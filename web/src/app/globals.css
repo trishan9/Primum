@@ -1,0 +1,336 @@
+@import "tailwindcss";
+
+/*
+  Primum design tokens.
+  Chrome is achromatic. Colour is spent in three places only: the one data hue
+  (the confidence reading and the lead series of a chart), the three claim
+  verdicts, and the emergency state. See DESIGN.md for the reasons.
+*/
+
+:root {
+  color-scheme: light;
+
+  --ground: #f3f5f4;
+  --surface: #ffffff;
+  --raised: #eaedeb;
+  --border: #dfe3e1;
+  --rule: #ebeeec;
+  --control: #8b918e;
+  --text: #111413;
+  --muted: #555b58;
+  --faint: #666c69;
+  --primary: #151817;
+  --on-primary: #ffffff;
+
+  --accent: #2a78d6;
+  --link: #1c5cab;
+
+  --supported: #1d6b40;
+  --supported-bg: #def4e5;
+  --supported-ink: #0b3a20;
+  --unsupported: #84480a;
+  --unsupported-bg: #fcf1d3;
+  --unsupported-ink: #653705;
+  --contradicted: #b0241c;
+  --contradicted-bg: #fde7e3;
+  --contradicted-ink: #76150f;
+
+  --hatch: #a3a9a6;
+  --frame: #c3c8c5;
+  --grid: #e4e7e5;
+  --axis: #b9bfbc;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-rest: #8b918e;
+
+  --shadow-float: 0 8px 24px rgb(17 20 19 / 0.12), 0 1px 2px rgb(17 20 19 / 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --ground: #0d0e0e;
+    --surface: #161717;
+    --raised: #202222;
+    --border: #2b2e2d;
+    --rule: #212423;
+    --control: #737876;
+    --text: #f1f3f2;
+    --muted: #b4b8b6;
+    --faint: #969a98;
+    --primary: #f1f3f2;
+    --on-primary: #0d0e0e;
+
+    --accent: #3987e5;
+    --link: #86b6ef;
+
+    --supported: #5fcf8e;
+    --supported-bg: #14291d;
+    --supported-ink: #8fe0b0;
+    --unsupported: #e3b454;
+    --unsupported-bg: #2c2410;
+    --unsupported-ink: #f0cd85;
+    --contradicted: #f0857c;
+    --contradicted-bg: #321a18;
+    --contradicted-ink: #f6aaa3;
+
+    --hatch: #5a5f5d;
+    --frame: #3a3d3c;
+    --grid: #262929;
+    --axis: #4a4e4c;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-rest: #737876;
+
+    --shadow-float: 0 8px 24px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.4);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --ground: #0d0e0e;
+  --surface: #161717;
+  --raised: #202222;
+  --border: #2b2e2d;
+  --rule: #212423;
+  --control: #737876;
+  --text: #f1f3f2;
+  --muted: #b4b8b6;
+  --faint: #969a98;
+  --primary: #f1f3f2;
+  --on-primary: #0d0e0e;
+
+  --accent: #3987e5;
+  --link: #86b6ef;
+
+  --supported: #5fcf8e;
+  --supported-bg: #14291d;
+  --supported-ink: #8fe0b0;
+  --unsupported: #e3b454;
+  --unsupported-bg: #2c2410;
+  --unsupported-ink: #f0cd85;
+  --contradicted: #f0857c;
+  --contradicted-bg: #321a18;
+  --contradicted-ink: #f6aaa3;
+
+  --hatch: #5a5f5d;
+  --frame: #3a3d3c;
+  --grid: #262929;
+  --axis: #4a4e4c;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-rest: #737876;
+
+  --shadow-float: 0 8px 24px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.4);
+}
+
+@theme inline {
+  --color-ground: var(--ground);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-line: var(--border);
+  --color-rule: var(--rule);
+  --color-control: var(--control);
+  --color-ink: var(--text);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-accent: var(--accent);
+  --color-link: var(--link);
+  --color-supported: var(--supported);
+  --color-supported-bg: var(--supported-bg);
+  --color-supported-ink: var(--supported-ink);
+  --color-unsupported: var(--unsupported);
+  --color-unsupported-bg: var(--unsupported-bg);
+  --color-unsupported-ink: var(--unsupported-ink);
+  --color-contradicted: var(--contradicted);
+  --color-contradicted-bg: var(--contradicted-bg);
+  --color-contradicted-ink: var(--contradicted-ink);
+  --color-hatch: var(--hatch);
+
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-stix), "STIX Two Text", Georgia, serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
+
+  --radius-card: 8px;
+  --radius-control: 6px;
+  --radius-chip: 4px;
+
+  --shadow-float: var(--shadow-float);
+
+  --breakpoint-xs: 26rem;
+}
+
+@layer base {
+  html {
+    background: var(--ground);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    scrollbar-color: var(--control) transparent;
+    scroll-padding-top: 5rem;
+  }
+
+  body {
+    min-height: 100dvh;
+    background: var(--ground);
+    font-feature-settings: "kern", "liga";
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: #ffffff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  input,
+  textarea,
+  select {
+    caret-color: var(--accent);
+  }
+
+  button,
+  [role="button"],
+  summary,
+  select,
+  label[for] {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  a {
+    text-underline-offset: 0.18em;
+    text-decoration-thickness: 1px;
+  }
+
+  mark {
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+    color: inherit;
+    border-radius: 2px;
+    padding: 0.05em 0;
+    text-decoration: underline 2px var(--accent);
+    text-underline-offset: 0.22em;
+  }
+
+  summary {
+    list-style: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+}
+
+@layer components {
+  /* Every number that sits in a column, a reading or anything that updates. */
+  .num {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  /* Reading text: what the instrument says in prose, set in the face scientific journals use. */
+  .reading {
+    font-family: var(--font-serif);
+    font-size: 1.1875rem;
+    line-height: 1.6;
+    font-variant-numeric: oldstyle-nums proportional-nums;
+  }
+  .reading p + p {
+    margin-top: 0.85em;
+  }
+  .reading ul,
+  .reading ol {
+    margin: 0.6em 0 0.6em 1.2em;
+  }
+  .reading ul {
+    list-style: disc;
+  }
+  .reading ol {
+    list-style: decimal;
+  }
+  .reading li + li {
+    margin-top: 0.3em;
+  }
+  .reading strong {
+    font-weight: 600;
+  }
+
+  /* The withheld zone: the region of the confidence scale the system will not answer from.
+     The same hatch marks every withheld thing, so abstention never depends on colour. */
+  .hatch {
+    background-color: var(--hatch);
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M-2 2 2 -2M0 8 8 0M6 10 10 6' stroke='black' stroke-width='1.1'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M-2 2 2 -2M0 8 8 0M6 10 10 6' stroke='black' stroke-width='1.1'/%3E%3C/svg%3E");
+    -webkit-mask-size: 8px 8px;
+    mask-size: 8px 8px;
+  }
+
+  .prose-method {
+    font-family: var(--font-serif);
+    font-size: 1.1875rem;
+    line-height: 1.62;
+  }
+  .prose-method > * + p {
+    margin-top: 1em;
+  }
+  .prose-method a {
+    color: var(--link);
+    text-decoration: underline;
+  }
+}
+
+@keyframes caret-blink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  55%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes stage-sweep {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .hatch {
+    forced-color-adjust: none;
+    background-color: CanvasText;
+  }
+}
