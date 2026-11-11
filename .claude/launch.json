@@ -12,6 +12,12 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["-C", "web", "dev"],
       "port": 3000
+    },
+    {
+      "name": "web-fixtures",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["NEXT_PUBLIC_FIXTURES=1", "pnpm", "-C", "web", "dev"],
+      "port": 3000
     }
   ]
 }

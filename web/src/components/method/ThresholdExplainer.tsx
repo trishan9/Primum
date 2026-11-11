@@ -2,11 +2,16 @@
 
 import { useId, useMemo, useState } from "react";
 
-import { linear } from "@/components/charts/scale";
+import { scaleLinear } from "d3-scale";
 import { useWidth } from "@/components/charts/useSize";
 import { useLoaded, type Loaded } from "@/components/experiments/useExperiment";
 import { useApi } from "@/components/shell/ApiProvider";
-import { Code, EmptyBlock, Segmented } from "@/components/ui/controls";
+import { Card } from "@/components/ui/card";
+import { Code } from "@/components/ui/code";
+import { Segmented } from "@/components/ui/segmented";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Stat, StatGroup } from "@/components/ui/stat";
+import { cn } from "@/components/ui/cn";
 import { getCalibration, getExperimentsIndex, MAIN_RUN } from "@/lib/api";
 import { fmtAlpha, fmtInt, fmtP, fmtPct, fmtProb } from "@/lib/format";
 import { generatorName, isRecord, runLabel, runPathPrefix } from "@/lib/results";
@@ -20,6 +25,7 @@ import {
   type CalibrationRows,
   type Selection,
 } from "@/lib/stats";
+import { DEFAULT_DELTA, SPEC_ALPHAS, SPEC_DEFAULT_ALPHA } from "@/lib/types";
 
 const M = { top: 30, right: 16, bottom: 40, left: 46 };
 const H = 320;
@@ -52,8 +58,8 @@ function Chart({
   const patternId = useId();
   const plotW = Math.max(0, width - M.left - M.right);
   const plotH = H - M.top - M.bottom;
-  const sx = linear([0, 1], [M.left, M.left + plotW]);
-  const sy = linear([0, 1], [M.top + plotH, M.top]);
+  const sx = scaleLinear().domain([0, 1]).range([M.left, M.left + plotW]);
+  const sy = scaleLinear().domain([0, 1]).range([M.top + plotH, M.top]);
   const ticks = [0, 0.2, 0.4, 0.6, 0.8, 1];
 
   const path = (key: "risk" | "coverage") => {
@@ -95,7 +101,7 @@ function Chart({
           </defs>
 
           <rect x={sx(0)} y={M.top} width={sx(withheldTo) - sx(0)} height={plotH} fill="var(--raised)" opacity="0.6" />
-          <rect x={sx(0)} y={M.top} width={sx(withheldTo) - sx(0)} height={plotH} fill={`url(#${patternId})`} opacity={certified === null ? 0.3 : 0.55} />
+          <rect x={sx(0)} y={M.top} width={sx(withheldTo) - sx(0)} height={plotH} fill={`url(#${patternId})`} opacity={certified === null ? 0.25 : 0.35} />
           {plotW > 300 && sx(withheldTo) - sx(0) > 90 ? (
             <text x={sx(0) + 8} y={M.top + plotH - 9} className="fill-(--text) text-[12px]">
               withheld
@@ -138,7 +144,7 @@ function Chart({
             ),
           )}
 
-          <path d={path("coverage")} fill="none" stroke="var(--series-rest)" strokeWidth="2" strokeLinejoin="round" />
+          <path d={path("coverage")} fill="none" stroke="var(--series-2)" strokeWidth="2" strokeLinejoin="round" />
           <path d={path("risk")} fill="none" stroke="var(--series-1)" strokeWidth="2" strokeLinejoin="round" />
           {sweep[0] ? (
             <text x={sx(0.02)} y={sy(sweep[0].coverage) + 16} className="fill-(--text) text-[12px]">
@@ -160,11 +166,13 @@ function Chart({
           {plugIn !== null && (certified === null || Math.abs(plugIn - certified) > 0.004) ? (
             <g>
               <line x1={sx(plugIn)} x2={sx(plugIn)} y1={M.top} y2={M.top + plotH} stroke="var(--muted)" strokeWidth="1.5" strokeDasharray="2 4" />
-              {/* Second row, so it never collides with the certified label when the two are close. */}
-              <text x={sx(plugIn) - 5} y={M.top + (certified !== null ? 30 : 12)} textAnchor="end" className="num fill-(--muted) text-[12px]">
-                {plotW > 420 ? "uncorrected " : ""}
-                {fmtProb(plugIn)}
-              </text>
+              {/* Second row, so it never collides with the certified label; on a narrow plot the dotted line alone (the key names it). */}
+              {plotW > 340 ? (
+                <text x={sx(plugIn) - 5} y={M.top + (certified !== null ? 30 : 12)} textAnchor="end" className="num fill-(--muted) text-[12px]">
+                  {plotW > 420 ? "uncorrected " : ""}
+                  {fmtProb(plugIn)}
+                </text>
+              ) : null}
             </g>
           ) : null}
 
@@ -195,9 +203,11 @@ type Split = "calibration" | "heldout";
 function Explainer({ data }: { data: CalibrationData }) {
   const id = useId();
   const { meta } = useApi();
-  const [alpha, setAlpha] = useState(0.1);
+  // null until the reader picks one: the server's default α applies, else the spec's.
+  const [picked, setAlpha] = useState<number | null>(null);
+  const alpha = picked ?? (typeof meta?.alpha === "number" ? meta.alpha : SPEC_DEFAULT_ALPHA);
   const [split, setSplit] = useState<Split>("calibration");
-  const delta = data.delta ?? (typeof meta?.delta === "number" ? meta.delta : 0.1);
+  const delta = data.delta ?? (typeof meta?.delta === "number" ? meta.delta : DEFAULT_DELTA);
   const deltaKnown = data.delta !== null || typeof meta?.delta === "number";
   // The server's minimum selection size, so the walk and the plug-in rule here match its own.
   const minSelected = data.minSelected ?? DEFAULT_MIN_SELECTED;
@@ -227,20 +237,23 @@ function Explainer({ data }: { data: CalibrationData }) {
   const plugInShown = plugIn ? selectAt(shown.conf, shown.correct, plugIn.threshold) : null;
   const failed = certificate.steps.find((step) => !step.passed);
   const first = certificate.steps[0];
-  const presets = data.certified.length > 0 ? data.certified.map((c) => c.alpha) : [0.05, 0.1, 0.15, 0.2];
+  const presets: readonly number[] = data.certified.length > 0 ? data.certified.map((c) => c.alpha) : SPEC_ALPHAS;
   const splitWord = onHeldout ? "held-out" : "calibration";
+  const hasDeployed = data.certified.some((c) => c.threshold !== null);
 
   return (
-    <div className="rounded-card border border-line bg-surface">
-      <div className="border-b border-rule p-4 sm:p-5">
-        <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
-          <div className="min-w-0 flex-1 basis-72">
-            <label htmlFor={`${id}-alpha`} className="flex items-baseline justify-between gap-3 text-sm font-medium text-ink">
-              <span>Tolerated error rate among released answers (α)</span>
-              <output htmlFor={`${id}-alpha`} className="num text-[1.0625rem] font-semibold">
+    <>
+      <Card.Body className="@container border-t border-rule">
+        <div className="grid gap-x-10 gap-y-6 @min-[46rem]:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+          <div className="min-w-0">
+            <div className="flex items-end justify-between gap-4">
+              <label htmlFor={`${id}-alpha`} className="text-[0.8125rem] font-medium text-ink">
+                Tolerated error rate among released answers (α)
+              </label>
+              <output htmlFor={`${id}-alpha`} className="num -mb-1 text-kpi leading-none tracking-[-0.01em] text-ink">
                 {fmtAlpha(alpha)}
               </output>
-            </label>
+            </div>
             <input
               id={`${id}-alpha`}
               type="range"
@@ -249,97 +262,119 @@ function Explainer({ data }: { data: CalibrationData }) {
               step={0.01}
               value={alpha}
               onChange={(event) => setAlpha(Number(event.target.value))}
-              className="mt-2 h-11 w-full accent-[var(--accent)] sm:h-6"
+              aria-valuetext={`α ${fmtAlpha(alpha)}; certified threshold ${certificate.threshold === null ? "none" : fmtProb(certificate.threshold)}`}
+              className="mt-2 block h-11 w-full cursor-pointer accent-[var(--accent)]"
             />
-          </div>
-          <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Risk levels the deployed system offers">
-            {presets.map((preset) => (
-              <button
-                key={preset}
-                type="button"
-                aria-pressed={Math.abs(alpha - preset) < 1e-9}
-                onClick={() => setAlpha(preset)}
-                className={`num min-h-11 min-w-12 rounded-control border px-2.5 text-sm sm:min-h-8 ${
-                  Math.abs(alpha - preset) < 1e-9
-                    ? "border-primary bg-primary font-medium text-on-primary"
-                    : "border-control text-muted hover:border-ink hover:text-ink"
-                }`}
+            <div aria-hidden="true" className="num mt-1 flex justify-between text-xs text-faint">
+              <span>{fmtAlpha(0.02)}, strict</span>
+              <span>lenient, {fmtAlpha(0.4)}</span>
+            </div>
+            <div className="mt-4">
+              <p id={`${id}-presets`} className="text-[0.8125rem] font-medium text-ink">
+                Risk levels the deployed system offers
+              </p>
+              <div
+                role="group"
+                aria-labelledby={`${id}-presets`}
+                className="mt-1.5 inline-flex max-w-full flex-wrap gap-0.5 rounded-control bg-raised p-0.5 ring-1 ring-line ring-inset"
               >
-                {fmtAlpha(preset)}
-              </button>
-            ))}
+                {presets.map((preset) => {
+                  const on = Math.abs(alpha - preset) < 1e-9;
+                  return (
+                    <button
+                      key={preset}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => setAlpha(preset)}
+                      className={cn(
+                        "num min-h-11 min-w-12 rounded-[6px] px-2.5 text-sm transition-[background-color,color,box-shadow] duration-(--dur-fast) sm:min-h-8",
+                        on
+                          ? "bg-surface font-medium text-ink shadow-control ring-1 ring-control/80"
+                          : "text-muted hover:bg-active hover:text-ink",
+                      )}
+                    >
+                      {fmtAlpha(preset)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          <div className="min-w-0">
+            {heldout ? (
+              <Segmented<Split>
+                legend="Questions the threshold is evaluated on"
+                name={`${id}-split`}
+                value={split}
+                onChange={setSplit}
+                fill
+                options={[
+                  { value: "calibration", label: `Calibration, ${fmtInt(data.conf.length)}` },
+                  { value: "heldout", label: `Held out, ${fmtInt(heldout.conf.length)}` },
+                ]}
+              />
+            ) : null}
+            <p className={cn("text-[0.8125rem] leading-relaxed text-muted", heldout && "mt-3")}>
+              The certificate is computed on the calibration split only.{" "}
+              {heldout
+                ? onHeldout
+                  ? "The held-out questions played no part in fitting the confidence model, calibrating it or choosing the threshold, so what you see here is out-of-sample."
+                  : "Switch to the held-out questions to see the same threshold applied to questions that played no part in choosing it."
+                : "The server sent no held-out questions, so the threshold can only be shown on the questions it was certified on."}
+            </p>
           </div>
         </div>
-        <div className="mt-4 flex flex-wrap items-end gap-x-6 gap-y-2">
-          {heldout ? (
-            <Segmented<Split>
-              legend="Questions the threshold is evaluated on"
-              name={`${id}-split`}
-              value={split}
-              onChange={setSplit}
-              options={[
-                { value: "calibration", label: `Calibration, ${fmtInt(data.conf.length)}` },
-                { value: "heldout", label: `Held out, ${fmtInt(heldout.conf.length)}` },
-              ]}
-            />
-          ) : null}
-          <p className="min-w-0 flex-1 basis-72 text-[0.8125rem] leading-relaxed text-muted">
-            The certificate is computed on the calibration split only.{" "}
-            {heldout
-              ? onHeldout
-                ? "The held-out questions played no part in fitting the confidence model, calibrating it or choosing the threshold, so what you see here is out-of-sample."
-                : "Switch to the held-out questions to see the same threshold applied to questions that played no part in choosing it."
-              : "The server sent no held-out questions, so the threshold can only be shown on the questions it was certified on."}
-          </p>
-        </div>
-      </div>
+      </Card.Body>
 
-      <dl className="num grid grid-cols-2 gap-px border-b border-rule bg-(--rule) text-sm sm:grid-cols-4" aria-live="polite">
-        <div className="bg-surface p-4 sm:px-5">
-          <dt className="text-xs text-muted">Certified threshold, from calibration</dt>
-          <dd className="mt-0.5 text-[1.5rem] font-semibold leading-tight text-ink">
-            {certificate.threshold === null ? "none" : fmtProb(certificate.threshold)}
-          </dd>
-        </div>
-        <div className="bg-surface p-4 sm:px-5">
-          <dt className="text-xs text-muted">Questions answered, {splitWord}</dt>
-          <dd className="mt-0.5 text-[1.5rem] font-semibold leading-tight text-ink">
-            {selection ? fmtPct(selection.coverage) : "0%"}
-            <span className="ml-1.5 text-xs font-normal text-muted">
-              {selection ? fmtInt(selection.nSelected) : 0} of {fmtInt(shown.conf.length)}
-            </span>
-          </dd>
-        </div>
-        <div className="bg-surface p-4 sm:px-5">
-          <dt className="text-xs text-muted">Wrong among answered, {splitWord}</dt>
-          <dd className="mt-0.5 text-[1.5rem] font-semibold leading-tight text-ink">
-            {selection && selection.nSelected > 0 ? fmtPct(selection.risk, 1) : "–"}
-            {selection && selection.nSelected > 0 ? (
-              <span className="ml-1.5 text-xs font-normal text-muted">
-                {fmtInt(selection.nErrors)} {selection.nErrors === 1 ? "error" : "errors"}
-              </span>
-            ) : null}
-          </dd>
-        </div>
-        <div className="bg-surface p-4 sm:px-5">
-          <dt className="text-xs text-muted">p-value of the test, calibration</dt>
-          <dd className="mt-0.5 text-[1.5rem] font-semibold leading-tight text-ink">
-            {fmtP(certificate.pValue)}
-            <span className="ml-1.5 whitespace-nowrap text-xs font-normal text-muted">limit δ = {fmtAlpha(delta)}</span>
-          </dd>
-        </div>
-      </dl>
+      <Card.Body className="pt-0">
+        {/* Not a live region: a slider drag would re-announce every figure. The slider's value text says the threshold. */}
+        <StatGroup columns={4} className="bg-line">
+          <Stat>
+            <Stat.Label>Certified threshold</Stat.Label>
+            <Stat.Value lead>{certificate.threshold === null ? "none" : fmtProb(certificate.threshold)}</Stat.Value>
+            <Stat.Note>from the calibration split</Stat.Note>
+          </Stat>
+          <Stat>
+            <Stat.Label>Questions answered</Stat.Label>
+            <Stat.Value>{selection ? fmtPct(selection.coverage) : "0%"}</Stat.Value>
+            <Stat.Note>
+              {selection ? fmtInt(selection.nSelected) : 0} of {fmtInt(shown.conf.length)}, {splitWord} split
+            </Stat.Note>
+          </Stat>
+          <Stat>
+            <Stat.Label>Wrong among answered</Stat.Label>
+            <Stat.Value>{selection && selection.nSelected > 0 ? fmtPct(selection.risk, 1) : "–"}</Stat.Value>
+            <Stat.Note>
+              {selection && selection.nSelected > 0
+                ? `${fmtInt(selection.nErrors)} ${selection.nErrors === 1 ? "error" : "errors"}, `
+                : ""}
+              {splitWord} split
+            </Stat.Note>
+          </Stat>
+          <Stat>
+            <Stat.Label>p-value of the test</Stat.Label>
+            <Stat.Value>{fmtP(certificate.pValue)}</Stat.Value>
+            <Stat.Note>limit δ = {fmtAlpha(delta)}, calibration split</Stat.Note>
+          </Stat>
+        </StatGroup>
+      </Card.Body>
 
-      <div className="p-4 sm:p-5">
-        <Chart
-          sweep={sweep}
-          alpha={alpha}
-          certified={certificate.threshold}
-          plugIn={plugIn ? plugIn.threshold : null}
-          deployed={data.certified}
-        />
+      <Card.Body className="pt-1">
+        <ChartLegend plugIn={plugIn !== null} deployed={hasDeployed} />
+        <div className="mt-3">
+          <Chart
+            sweep={sweep}
+            alpha={alpha}
+            certified={certificate.threshold}
+            plugIn={plugIn ? plugIn.threshold : null}
+            deployed={data.certified}
+          />
+        </div>
+      </Card.Body>
 
-        <div className="mt-4 max-w-[72ch] space-y-2 text-sm leading-relaxed text-ink">
+      <Card.Body className="border-t border-rule">
+        <div className="max-w-[72ch] space-y-3 font-serif text-[1.0625rem] leading-[1.55] text-ink">
           {certificate.threshold === null ? (
             <p>
               No threshold can be certified at α = {fmtAlpha(alpha)}.{" "}
@@ -382,24 +417,65 @@ function Explainer({ data }: { data: CalibrationData }) {
               {fmtInt(plugInShown.nSelected)} held-out questions with an error rate of {fmtPct(plugInShown.risk, 1)}.
             </p>
           ) : null}
-          <p className="text-[0.8125rem] text-muted">
-            Answering everything on these {fmtInt(shown.conf.length)} {splitWord} questions is wrong{" "}
-            {fmtPct(all.risk, 1)} of the time. The certificate is computed in your browser from the{" "}
-            {fmtInt(data.conf.length)} calibration questions served by <Code>/api/calibration</Code>, with the same
-            fixed-sequence binomial test as <Code>primum.uncertainty.conformal</Code>
-            {data.minSelected !== null
-              ? ` and the server's minimum of ${fmtInt(data.minSelected)} answered questions per tested threshold.`
-              : `. The server did not send its minimum selection size, so ${fmtInt(DEFAULT_MIN_SELECTED)} is used, and the thresholds here may differ from the server's.`}{" "}
-            {data.certified.some((c) => c.threshold !== null)
-              ? "Small triangles above the plot mark the thresholds the deployed system applies; with the same settings they should coincide with the certified line at the same α."
-              : ""}
-            {deltaKnown ? "" : " The server did not state δ, so the project default of 0.10 is used."} The guarantee is
-            for PubMedQA questions answered by the same pipeline; for questions asked in chat the threshold is an
-            operating point.
-          </p>
         </div>
-      </div>
-    </div>
+      </Card.Body>
+
+      <Card.Footer className="block leading-relaxed">
+        <p className="max-w-[90ch]">
+          Answering everything on these {fmtInt(shown.conf.length)} {splitWord} questions is wrong{" "}
+          {fmtPct(all.risk, 1)} of the time. The certificate is computed in your browser from the{" "}
+          {fmtInt(data.conf.length)} calibration questions served by <Code>/api/calibration</Code>, with the same
+          fixed-sequence binomial test as <Code wrap>primum.uncertainty.conformal</Code>
+          {data.minSelected !== null
+            ? ` and the server's minimum of ${fmtInt(data.minSelected)} answered questions per tested threshold.`
+            : `. The server did not send its minimum selection size, so ${fmtInt(DEFAULT_MIN_SELECTED)} is used, and the thresholds here may differ from the server's.`}{" "}
+          {hasDeployed
+            ? "Small triangles above the plot mark the thresholds the deployed system applies; with the same settings they should coincide with the certified line at the same α."
+            : ""}
+          {deltaKnown ? "" : ` The server did not state δ, so the project default of ${fmtAlpha(DEFAULT_DELTA)} is used.`} The guarantee is
+          for PubMedQA questions answered by the same pipeline; for questions asked in chat the threshold is an
+          operating point.
+        </p>
+      </Card.Footer>
+    </>
+  );
+}
+
+/** What each mark on the chart means, in words beside a sample of the mark. */
+function ChartLegend({ plugIn, deployed }: { plugIn: boolean; deployed: boolean }) {
+  return (
+    <ul className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted" aria-label="Chart key">
+      <LegendItem swatch={<span className="block h-0.5 w-4 rounded-full bg-(--series-1)" />}>Error rate among answered</LegendItem>
+      <LegendItem swatch={<span className="block h-0.5 w-4 rounded-full bg-(--series-2)" />}>Coverage</LegendItem>
+      <LegendItem swatch={<span className="block w-4 border-t border-dashed border-ink" />}>Target α</LegendItem>
+      <LegendItem swatch={<span className="block h-3 w-0.5 bg-ink" />}>Certified threshold</LegendItem>
+      {plugIn ? (
+        <LegendItem swatch={<span className="block h-3 border-l-[1.5px] border-dotted border-muted" />}>Uncorrected threshold</LegendItem>
+      ) : null}
+      <LegendItem swatch={<span className="hatch block size-3 rounded-[2px]" />}>Withheld</LegendItem>
+      {deployed ? (
+        <LegendItem
+          swatch={
+            <svg width="10" height="8" viewBox="0 0 10 8" aria-hidden="true" className="fill-(--muted)">
+              <path d="M1 0h8L5 7Z" />
+            </svg>
+          }
+        >
+          Deployed threshold
+        </LegendItem>
+      ) : null}
+    </ul>
+  );
+}
+
+function LegendItem({ swatch, children }: { swatch: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <li className="flex items-center gap-1.5">
+      <span aria-hidden="true" className="flex w-4 items-center justify-center">
+        {swatch}
+      </span>
+      {children}
+    </li>
   );
 }
 
@@ -407,82 +483,122 @@ function Explainer({ data }: { data: CalibrationData }) {
  * The interactive threshold explainer, with a picker over the generator runs that have RQ3
  * results. It draws nothing until real calibration data exists.
  */
+const fetchIndex = (signal: AbortSignal) => getExperimentsIndex(signal);
+const fetchCalibration = (signal: AbortSignal, run: string) => getCalibration(signal, run);
+
 export function ThresholdExplainer() {
+  const titleId = useId();
   const [picked, setPicked] = useState(MAIN_RUN);
-  const index = useLoaded((signal) => getExperimentsIndex(signal), "experiments-index");
+  const index = useLoaded(fetchIndex, [] as const);
   const runs = index.status === "ready" ? (index.data.runs ?? []).filter((r) => r.available.includes("rq3_conformal")) : [];
   const run = runs.some((r) => r.run === picked) ? picked : MAIN_RUN;
-  const loaded = useLoaded((signal) => getCalibration(signal, run), `calibration/${run}`);
+  const loaded = useLoaded(fetchCalibration, [run] as const);
   const llm = loaded.status === "ready" && isRecord(loaded.data) && typeof loaded.data.llm === "string" ? loaded.data.llm : null;
 
   return (
-    <div className="space-y-3">
-      {runs.length > 1 ? (
-        <Segmented
-          legend="Generator whose calibration rows are shown"
-          name="explainer-run"
-          value={run}
-          options={runs.map((r) => ({ value: r.run, label: runLabel(r, runs) }))}
-          onChange={setPicked}
-        />
-      ) : null}
-      {llm ? (
-        <p className="num font-sans text-xs text-muted">
-          Showing {generatorName(llm)} ({llm}), from results/{runPathPrefix(run)}rq3_conformal.json, and the thresholds RQ3
-          certified for that generator. Each generator has its own calibration rows and thresholds.
-        </p>
-      ) : null}
+    <Card variant="accent" aria-labelledby={titleId}>
+      <Card.Header className="pb-4">
+        <Card.Heading>
+          <Card.Title as="h3" id={titleId}>
+            Threshold explorer
+          </Card.Title>
+          <Card.Description className="num max-w-[72ch]">
+            {llm ? (
+              <>
+                Showing {generatorName(llm)} (<span className="font-mono text-xs">{llm}</span>), from{" "}
+                <span className="[overflow-wrap:anywhere]">results/{runPathPrefix(run)}rq3_conformal.json</span>, and the
+                thresholds RQ3 certified for that generator. Each generator has its own calibration rows and thresholds.
+              </>
+            ) : (
+              "Real calibration predictions from the third experiment, certified in your browser."
+            )}
+          </Card.Description>
+        </Card.Heading>
+        {runs.length > 1 ? (
+          <Card.Actions className="w-full @min-[40rem]:w-auto">
+            <Segmented
+              legend="Generator whose calibration rows are shown"
+              hideLegend
+              fill
+              name="explainer-run"
+              value={run}
+              options={runs.map((r) => ({ value: r.run, label: runLabel(r, runs) }))}
+              onChange={setPicked}
+              className="w-full @min-[40rem]:w-auto"
+            />
+          </Card.Actions>
+        ) : null}
+      </Card.Header>
       <ExplainerBody key={run} loaded={loaded} />
-    </div>
+    </Card>
+  );
+}
+
+/** A state of the explainer with nothing to draw: what is missing and what produces it. */
+function Notice({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <Card.Body className="border-t border-rule">
+      <div className="rounded-control border border-dashed border-frame px-4 py-4 sm:px-5">
+        <p className="text-sm font-medium text-ink">{title}</p>
+        <div className="mt-1 max-w-[62ch] text-sm leading-relaxed text-muted">{children}</div>
+      </div>
+    </Card.Body>
   );
 }
 
 function ExplainerBody({ loaded }: { loaded: Loaded<unknown> }) {
-
   if (loaded.status === "loading") {
     return (
-      <p className="font-sans text-sm text-muted" aria-busy="true">
-        Looking for calibration predictions.
-      </p>
+      <div aria-busy="true">
+        <p className="sr-only">Looking for calibration predictions.</p>
+        <Card.Body className="border-t border-rule">
+          <Skeleton className="h-4 w-64 max-w-full" />
+          <Skeleton className="mt-4 h-7 w-full" />
+        </Card.Body>
+        <Card.Body className="pt-0">
+          <Skeleton className="h-[5.5rem] w-full rounded-card" />
+          <Skeleton className="mt-6 h-80 w-full rounded-card" />
+        </Card.Body>
+      </div>
     );
   }
   if (loaded.status === "missing") {
     return (
-      <EmptyBlock title="The explainer has no data yet">
+      <Notice title="The explainer has no data yet">
         <p>
           It runs on real calibration and held-out predictions, which exist only after the third experiment has run. Run{" "}
           <Code>primum exp rq3</Code>, then reload this page. Until then nothing is drawn here: an explainer with
           made-up numbers would defeat its purpose.
         </p>
-      </EmptyBlock>
+      </Notice>
     );
   }
   if (loaded.status === "down") {
     return (
-      <EmptyBlock title="The explainer is not loaded">
+      <Notice title="The explainer is not loaded">
         <p>
           It runs on calibration predictions served by the API at <Code>/api/calibration</Code>, and the API is not
           answering. Start it with <Code>primum serve</Code>.
         </p>
-      </EmptyBlock>
+      </Notice>
     );
   }
   if (loaded.status === "error") {
     return (
-      <EmptyBlock title="The calibration data could not be read">
+      <Notice title="The calibration data could not be read">
         <p>{loaded.message}</p>
-      </EmptyBlock>
+      </Notice>
     );
   }
   const data = parseCalibration(loaded.data);
   if (!data) {
     return (
-      <EmptyBlock title="The calibration data is in a layout this page does not recognise">
+      <Notice title="The calibration data is in a layout this page does not recognise">
         <p>
           <Code>/api/calibration</Code> answered, but without per-question <Code>p_correct</Code> and{" "}
           <Code>correct</Code> values, so nothing is drawn.
         </p>
-      </EmptyBlock>
+      </Notice>
     );
   }
   return <Explainer data={data} />;

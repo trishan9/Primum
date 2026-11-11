@@ -260,4 +260,6 @@ export const SPEC_RETRIEVERS = [
 ] as const;
 export const SPEC_ALPHAS = [0.05, 0.1, 0.15, 0.2] as const;
 export const SPEC_DEFAULT_ALPHA = 0.1;
+/** The project's confidence parameter δ for the certified guarantee, used when the server does not state one. */
+export const DEFAULT_DELTA = 0.1;
 export const SPEC_DEFAULT_RETRIEVER = "hybrid-ft";

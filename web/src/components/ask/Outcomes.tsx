@@ -2,13 +2,16 @@
 
 import { ApiDown } from "@/components/shell/ApiDown";
 import { useApi } from "@/components/shell/ApiProvider";
-import { Button, Code } from "@/components/ui/controls";
-import { ChevronGlyph, WarningGlyph } from "@/components/ui/glyphs";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Code } from "@/components/ui/code";
+import { CheckGlyph, ChevronGlyph, WarningGlyph } from "@/components/ui/glyphs";
 import type { AskError } from "@/lib/ask-state";
 import { fmtAlpha, fmtPct, fmtProb, fmtUsd } from "@/lib/format";
 import type { ClaimVerdict, ConfidenceEvent, Decision, TriageResult } from "@/lib/types";
 
-import { ConfidenceScale } from "./ConfidenceScale";
+import { ConfidenceGauge } from "./ConfidenceGauge";
 import { FEATURE_COPY, STAGE_COPY } from "./copy";
 
 /* ---------- Confidence ---------- */
@@ -30,12 +33,15 @@ function Signals({ features }: { features: Record<string, number> }) {
   const entries = Object.entries(features);
   if (entries.length === 0) return null;
   return (
-    <details className="group mt-4 border-t border-rule pt-3">
-      <summary className="flex min-h-11 items-center gap-2 text-[0.8125rem] font-medium text-ink sm:min-h-0">
-        <ChevronGlyph size={14} className="-rotate-90 text-muted transition-transform duration-150 group-open:rotate-0" />
+    <details className="group border-t border-rule px-4 py-2 sm:px-5">
+      <summary className="-mx-2 flex min-h-11 cursor-pointer items-center gap-2 rounded-control px-2 text-[0.8125rem] font-medium text-ink hover:bg-raised sm:min-h-9">
+        <ChevronGlyph
+          size={14}
+          className="-rotate-90 text-muted transition-transform duration-150 group-open:rotate-0"
+        />
         Signals behind this estimate ({entries.length})
       </summary>
-      <table className="num mt-2 w-full max-w-md text-[0.8125rem]">
+      <table className="num mb-2 mt-1 w-full max-w-md text-[0.8125rem]">
         <caption className="sr-only">Input signals of the confidence model for this answer</caption>
         <tbody>
           {entries.map(([name, value]) => (
@@ -63,11 +69,11 @@ function BenchmarkFacts({
 }) {
   if (!decision && !predictionSet?.length && !gold) return null;
   return (
-    <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-2 border-t border-rule pt-3 text-sm">
+    <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-3 rounded-control bg-raised px-3.5 py-3 text-sm">
       {decision ? (
         <div>
           <dt className="text-xs text-muted">Decision</dt>
-          <dd className="font-serif text-[1.375rem] font-semibold leading-tight text-ink">{decision}</dd>
+          <dd className="mt-0.5 text-title font-semibold leading-tight text-ink">{decision}</dd>
         </div>
       ) : null}
       {predictionSet?.length ? (
@@ -101,32 +107,43 @@ export function Released({ confidence, decision, gold }: DecisionProps) {
   const calibrated = !uncalibrated && typeof threshold === "number";
 
   return (
-    <section aria-labelledby="decision-heading" className="rounded-card border border-line bg-surface p-4 sm:p-5">
-      <h2 id="decision-heading" className="font-serif text-[1.5rem] font-semibold leading-tight tracking-[-0.01em] text-ink">
-        {calibrated ? "Answer released" : "Answer shown without a guarantee"}
-      </h2>
-      <p className="mt-1.5 max-w-[70ch] text-sm leading-relaxed text-muted">
-        {calibrated ? (
-          <>
-            Calibrated confidence {fmtProb(p_correct)} clears the threshold {fmtProb(threshold)} certified for α ={" "}
-            {fmtAlpha(alpha)}. {guarantee_applies ? guaranteeSentence(alpha, delta) : OPERATING_POINT}
-          </>
-        ) : (
-          <>
-            No deployment bundle exists yet, so there is no calibrated confidence model and no certified threshold to
-            compare against. The answer below is shown as generated. Run <Code>primum exp rq3</Code> to fit the
-            bundle and switch the guarantee on.
-          </>
-        )}
-      </p>
-      {uncalibrated ? null : (
-        <div className="mt-4">
-          <ConfidenceScale p={p_correct} threshold={threshold} alpha={alpha} answered />
+    <Card variant={calibrated ? "accent" : "default"} aria-labelledby="decision-heading">
+      <div className="px-4 pb-4 pt-4 sm:px-5">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <h3 id="decision-heading" className="text-[1.0625rem] font-semibold leading-snug text-ink">
+            {calibrated ? "Answer released" : "Answer shown without a guarantee"}
+          </h3>
+          {calibrated ? (
+            <Badge tone="accent">
+              <CheckGlyph size={12} />
+              Cleared the threshold
+            </Badge>
+          ) : (
+            <Badge tone="outline">Not certified</Badge>
+          )}
         </div>
-      )}
-      <BenchmarkFacts decision={decision} predictionSet={confidence.prediction_set} gold={gold} />
+        <p className="mt-1.5 max-w-[70ch] text-sm leading-relaxed text-muted">
+          {calibrated ? (
+            <>
+              Calibrated confidence {fmtProb(p_correct)} clears the threshold {fmtProb(threshold)} certified for α&nbsp;=&nbsp;{fmtAlpha(alpha)}. {guarantee_applies ? guaranteeSentence(alpha, delta) : OPERATING_POINT}
+            </>
+          ) : (
+            <>
+              No deployment bundle exists yet, so there is no calibrated confidence model and no certified threshold to
+              compare against. The answer below is shown as generated. Run <Code>primum exp rq3</Code> to fit the bundle
+              and switch the guarantee on.
+            </>
+          )}
+        </p>
+        {uncalibrated ? null : (
+          <div className="mt-5">
+            <ConfidenceGauge p={p_correct} threshold={threshold} alpha={alpha} answered={confidence.answered} />
+          </div>
+        )}
+        <BenchmarkFacts decision={decision} predictionSet={confidence.prediction_set} gold={gold} />
+      </div>
       <Signals features={confidence.features} />
-    </section>
+    </Card>
   );
 }
 
@@ -142,7 +159,16 @@ interface WithheldProps extends DecisionProps {
  * Abstention. This is the system working as designed: it states that it is withholding,
  * gives the statistical reason in one sentence, and says what the reader can do next.
  */
-export function Withheld({ confidence, decision, gold, passageCount, verdicts, alphaOptions, onAskAgain, busy }: WithheldProps) {
+export function Withheld({
+  confidence,
+  decision,
+  gold,
+  passageCount,
+  verdicts,
+  alphaOptions,
+  onAskAgain,
+  busy,
+}: WithheldProps) {
   const { p_correct, threshold, alpha, delta, guarantee_applies } = confidence;
   const supported = verdicts.filter((v) => v.label === "supported").length;
   const contradicted = verdicts.filter((v) => v.label === "contradicted").length;
@@ -152,26 +178,31 @@ export function Withheld({ confidence, decision, gold, passageCount, verdicts, a
   const looser = alphaOptions.filter((a) => a > alpha + 1e-9);
 
   return (
-    <section aria-labelledby="decision-heading" className="overflow-hidden rounded-card border border-ink bg-surface">
-      <div aria-hidden="true" className="relative h-2.5 border-b border-ink bg-raised">
+    <Card aria-labelledby="decision-heading" className="overflow-hidden">
+      <div aria-hidden="true" className="relative h-2 bg-raised">
         <div className="hatch absolute inset-0" />
       </div>
-      <div className="p-4 sm:p-5">
-        <h2 id="decision-heading" className="font-serif text-[1.5rem] font-semibold leading-tight tracking-[-0.01em] text-ink">
-          Answer withheld
-        </h2>
-        <p className="reading mt-2 max-w-[66ch] !text-[1.125rem] text-ink">
+      <div className="px-4 pb-4 pt-4 sm:px-5">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <h3 id="decision-heading" className="text-[1.0625rem] font-semibold leading-snug text-ink">
+            Answer withheld
+          </h3>
+          <Badge tone="neutral">
+            <span aria-hidden="true" className="hatch inline-block size-3 rounded-[3px]" />
+            Below the threshold
+          </Badge>
+        </div>
+        <p className="reading mt-2 max-w-[66ch] !text-[1.0625rem] text-ink">
           {hasThreshold ? (
             <>
-              Primum drafted an answer and is not showing it, because its confidence falls below the threshold for
-              the risk level you chose. Its calibrated confidence is {fmtProb(p_correct)}, which is{" "}
-              {fmtProb(shortfall)} short of the {fmtProb(threshold)} needed at α ={" "}
-              {fmtAlpha(alpha)}.
+              Primum drafted an answer and is not showing it, because its confidence falls below the threshold for the
+              risk level you chose. Its calibrated confidence is {fmtProb(p_correct)}, which is {fmtProb(shortfall)}{" "}
+              short of the {fmtProb(threshold)} needed at α&nbsp;=&nbsp;{fmtAlpha(alpha)}.
             </>
           ) : (
             <>
-              Primum drafted an answer and is not showing it. On the calibration data, no confidence threshold could
-              be certified to keep errors at or below {fmtPct(alpha)}, so at α = {fmtAlpha(alpha)} every answer is
+              Primum drafted an answer and is not showing it. On the calibration data, no confidence threshold could be
+              certified to keep errors at or below {fmtPct(alpha)}, so at α&nbsp;=&nbsp;{fmtAlpha(alpha)} every answer is
               withheld.
             </>
           )}
@@ -194,40 +225,40 @@ export function Withheld({ confidence, decision, gold, passageCount, verdicts, a
         </p>
 
         <div className="mt-5">
-          <ConfidenceScale p={p_correct} threshold={threshold} alpha={alpha} answered={false} />
+          <ConfidenceGauge p={p_correct} threshold={threshold} alpha={alpha} answered={confidence.answered} />
         </div>
 
         <BenchmarkFacts decision={null} predictionSet={confidence.prediction_set} gold={gold ?? null} />
         {decision ? <span className="sr-only">A decision was drafted and is withheld.</span> : null}
-
-        <div className="mt-5 border-t border-rule pt-4">
-          <h3 className="text-[0.9375rem] font-semibold text-ink">What you can do</h3>
-          <ul className="mt-2 space-y-2.5 text-sm leading-relaxed text-ink">
-            <li>
-              Read the {passageCount === 1 ? "one passage" : `${passageCount} passages`} it retrieved, listed under
-              Evidence. They are real sources and were not withheld.
-            </li>
-            {looser.length > 0 ? (
-              <li>
-                <span>Accept more risk and ask again. A larger α certifies a lower threshold.</span>
-                <span className="mt-2 flex flex-wrap gap-2">
-                  {looser.map((a) => (
-                    <Button key={a} onClick={() => onAskAgain(a)} disabled={busy}>
-                      Ask again at α = {fmtAlpha(a)}
-                    </Button>
-                  ))}
-                </span>
-              </li>
-            ) : (
-              <li>This is already the most permissive risk level the system offers.</li>
-            )}
-            <li>Ask a clinician. This prototype is not a substitute for one.</li>
-          </ul>
-        </div>
-
-        <Signals features={confidence.features} />
       </div>
-    </section>
+
+      <div className="border-t border-rule px-4 py-4 sm:px-5">
+        <h4 className="text-sm font-semibold text-ink">What you can do</h4>
+        <ul className="mt-2 space-y-2.5 text-sm leading-relaxed text-ink">
+          <li>
+            Read the {passageCount === 1 ? "one passage" : `${passageCount} passages`} it retrieved, listed under
+            Sources. They are real sources and were not withheld.
+          </li>
+          {looser.length > 0 ? (
+            <li>
+              <span>Accept more risk and ask again. A larger α certifies a lower threshold.</span>
+              <span className="mt-2 flex flex-wrap gap-2">
+                {looser.map((a) => (
+                  <Button key={a} size="sm" onClick={() => onAskAgain(a)} disabled={busy}>
+                    <span className="num">Ask again at α = {fmtAlpha(a)}</span>
+                  </Button>
+                ))}
+              </span>
+            </li>
+          ) : (
+            <li>This is already the most permissive risk level the system offers.</li>
+          )}
+          <li>Ask a clinician. This prototype is not a substitute for one.</li>
+        </ul>
+      </div>
+
+      <Signals features={confidence.features} />
+    </Card>
   );
 }
 
@@ -238,26 +269,31 @@ export function Emergency({ triage }: { triage: TriageResult }) {
     <section
       role="alert"
       aria-labelledby="decision-heading"
-      className="rounded-card border-2 border-contradicted bg-contradicted-bg p-4 text-contradicted-ink sm:p-6"
+      className="rounded-card border border-emergency bg-emergency-bg p-4 text-emergency-ink sm:p-5"
     >
       <div className="flex items-start gap-3">
-        <WarningGlyph size={26} className="mt-0.5 hidden sm:block" />
+        <span
+          aria-hidden="true"
+          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-emergency text-on-primary max-sm:hidden"
+        >
+          <WarningGlyph size={18} />
+        </span>
         <div className="min-w-0">
-          <h2 id="decision-heading" className="font-serif text-[1.5rem] font-semibold leading-tight tracking-[-0.01em] sm:text-[1.625rem]">
+          <h3 id="decision-heading" className="text-title font-semibold leading-tight tracking-[-0.012em]">
             Call emergency services now
-          </h2>
-          <p className="reading mt-2 max-w-[62ch] !text-[1.125rem]">
+          </h3>
+          <p className="reading mt-2 max-w-[62ch] !text-[1.0625rem]">
             This may be an emergency.{" "}
             {triage.message?.trim() ||
               "What you describe can be a sign of a life-threatening condition that needs treatment within minutes."}
           </p>
-          <p className="mt-3 max-w-[62ch] text-[0.9375rem] font-medium leading-relaxed">
-            Call your local emergency number: 911 in the United States and Canada, 999 in the United Kingdom, 112 in
-            the European Union. Do not wait for an answer from this page.
+          <p className="mt-3 max-w-[62ch] text-[0.9375rem] font-semibold leading-relaxed">
+            Call your local emergency number: 911 in the United States and Canada, 999 in the United Kingdom, 112 in the
+            European Union. Do not wait for an answer from this page.
           </p>
         </div>
       </div>
-      <div className="mt-5 border-t border-contradicted/40 pt-4 text-sm leading-relaxed">
+      <div className="mt-4 border-t border-emergency/30 pt-3.5 text-sm leading-relaxed sm:ml-12">
         <p>
           Primum stopped before retrieving or generating anything, and will not answer this question. The stop comes
           from a fixed list of red-flag rules, not from a model.
@@ -277,12 +313,13 @@ export function UrgentNotice({ triage }: { triage: TriageResult }) {
   return (
     <div
       role="status"
-      className="flex items-start gap-2.5 rounded-card border border-unsupported bg-unsupported-bg px-4 py-3 text-sm leading-relaxed text-unsupported-ink"
+      className="flex items-start gap-2.5 rounded-card bg-unsupported-bg px-4 py-3 text-sm leading-relaxed text-unsupported-ink ring-1 ring-inset ring-unsupported/50"
     >
       <WarningGlyph size={18} className="mt-0.5" />
       <p>
         <span className="font-semibold">This may need prompt medical attention. </span>
-        {triage.message?.trim() || "Contact a clinician or an urgent care service today rather than relying on this page."}
+        {triage.message?.trim() ||
+          "Contact a clinician or an urgent care service today rather than relying on this page."}
         {triage.matched.length > 0 ? ` Rule matched: ${triage.matched.join("; ")}.` : ""}
       </p>
     </div>
@@ -300,7 +337,10 @@ interface FailureProps {
 /** Each failure names what stopped, why, and the command or setting that fixes it. */
 export function Failure({ error, foundPassages, onRetry }: FailureProps) {
   const { meta } = useApi();
-  const stageLabel = error.stage && error.stage in STAGE_COPY ? STAGE_COPY[error.stage as keyof typeof STAGE_COPY].label.toLowerCase() : error.stage;
+  const stageLabel =
+    error.stage && error.stage in STAGE_COPY
+      ? STAGE_COPY[error.stage as keyof typeof STAGE_COPY].label.toLowerCase()
+      : error.stage;
 
   if (error.kind === "unreachable") {
     return <ApiDown what="The question was not sent." />;
@@ -315,14 +355,13 @@ export function Failure({ error, foundPassages, onRetry }: FailureProps) {
       body = (
         <>
           <p>
-            Generation calls the Claude API, and the server started without a key. Add{" "}
-            <Code>ANTHROPIC_API_KEY</Code> to <Code>.env</Code> in the project root, restart{" "}
-            <Code>primum serve</Code>, and ask again.
+            Generation calls the Claude API, and the server started without a key. Add <Code>ANTHROPIC_API_KEY</Code> to{" "}
+            <Code>.env</Code> in the project root, restart <Code>primum serve</Code>, and ask again.
           </p>
           {foundPassages > 0 ? (
             <p className="mt-2">
               Retrieval does not need the key: the {foundPassages} {foundPassages === 1 ? "passage" : "passages"} found
-              for this question {foundPassages === 1 ? "is" : "are"} listed under Evidence.
+              for this question {foundPassages === 1 ? "is" : "are"} listed under Sources.
             </p>
           ) : null}
         </>
@@ -339,8 +378,8 @@ export function Failure({ error, foundPassages, onRetry }: FailureProps) {
             is a hard stop by design.
           </p>
           <p className="mt-2">
-            Raise <Code>PRIMUM_BUDGET_USD</Code> in <Code>.env</Code> and restart the server, or ask a question that
-            has been answered before: cached answers cost nothing. <Code>primum spend</Code> shows the ledger.
+            Raise <Code>PRIMUM_BUDGET_USD</Code> in <Code>.env</Code> and restart the server, or ask a question that has
+            been answered before: cached answers cost nothing. <Code>primum spend</Code> shows the ledger.
           </p>
         </>
       );
@@ -349,7 +388,9 @@ export function Failure({ error, foundPassages, onRetry }: FailureProps) {
       title = "The search index has not been built";
       body = (
         <>
-          <p>Retrieval has nothing to search yet. Build the corpus and its index from the project root, then ask again:</p>
+          <p>
+            Retrieval has nothing to search yet. Build the corpus and its index from the project root, then ask again:
+          </p>
           <p className="mt-2 flex flex-wrap gap-2">
             <Code>primum data build kb</Code>
             <Code>primum index build kb</Code>
@@ -370,25 +411,26 @@ export function Failure({ error, foundPassages, onRetry }: FailureProps) {
       body = (
         <>
           <p>{error.message || "The server reported an internal error without a message."}</p>
-          <p className="mt-2">The traceback is in the terminal running <Code>primum serve</Code>.</p>
+          <p className="mt-2">
+            The traceback is in the terminal running <Code>primum serve</Code>.
+          </p>
         </>
       );
   }
 
   return (
-    <section
-      role="alert"
-      aria-labelledby="decision-heading"
-      className="rounded-card border border-contradicted bg-surface p-4 sm:p-5"
-    >
-      <h2 id="decision-heading" className="flex items-start gap-2 text-[1.0625rem] font-semibold leading-snug text-ink">
-        <WarningGlyph size={18} className="mt-0.5 text-contradicted" />
+    <Card role="alert" aria-labelledby="decision-heading" className="p-4 sm:p-5">
+      {/* A setup or server error is not clinical danger: amber glyph, neutral edge. Red stays for emergencies. */}
+      <h3 id="decision-heading" className="flex items-start gap-2 text-[1.0625rem] font-semibold leading-snug text-ink">
+        <WarningGlyph size={18} className="mt-0.5 text-unsupported-ink" />
         {title}
-      </h2>
+      </h3>
       <div className="mt-2 max-w-[70ch] text-sm leading-relaxed text-ink">{body}</div>
       <div className="mt-4">
-        <Button onClick={onRetry}>Ask again</Button>
+        <Button size="sm" onClick={onRetry}>
+          Ask again
+        </Button>
       </div>
-    </section>
+    </Card>
   );
 }

@@ -2,20 +2,14 @@ import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans, STIX_Two_Text } from "next/font/google";
 
 import { ApiProvider } from "@/components/shell/ApiProvider";
-import { Masthead } from "@/components/shell/Masthead";
+import { AppShell } from "@/components/shell/AppShell";
+import { AppSidebar } from "@/components/shell/Sidebar";
+import { TopBar } from "@/components/shell/TopBar";
 
 import "./globals.css";
 
-// Reading text is set in STIX Two, the typeface family built for scientific publishing,
-// so an answer reads like a paragraph of the literature it cites.
-const stix = STIX_Two_Text({
-  subsets: ["latin", "latin-ext", "greek"],
-  style: ["normal", "italic"],
-  variable: "--font-stix",
-  display: "swap",
-});
-
-// Instrument chrome and every figure: a sans drawn for technical documentation, with true tabular figures.
+// Interface, labels and every figure: a sans drawn for technical documentation, with true
+// tabular figures and Greek (α, δ and λ̂ are content here).
 const plexSans = IBM_Plex_Sans({
   subsets: ["latin", "latin-ext", "greek"],
   weight: ["400", "500", "600"],
@@ -23,7 +17,16 @@ const plexSans = IBM_Plex_Sans({
   display: "swap",
 });
 
-// Commands and identifiers only.
+// Answer and method prose only: STIX Two, built for scientific publishing, so an answer reads
+// like a paragraph of the literature it cites.
+const stix = STIX_Two_Text({
+  subsets: ["latin", "latin-ext", "greek"],
+  style: ["normal", "italic"],
+  variable: "--font-stix",
+  display: "swap",
+});
+
+// Commands, identifiers and model names only.
 const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
   weight: ["400", "500"],
@@ -39,19 +42,19 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f3f5f4" },
-    { media: "(prefers-color-scheme: dark)", color: "#0d0e0e" },
+    { media: "(prefers-color-scheme: light)", color: "#eef1ef" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0c0c" },
   ],
 };
 
-// Applies a saved theme before first paint so the page never flashes the wrong one.
-const themeScript = `try{var t=localStorage.getItem("primum-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`;
+// Applies the saved theme and sidebar state before first paint, so neither flashes nor shifts.
+const prePaint = `try{var d=document.documentElement,t=localStorage.getItem("primum-theme");if(t==="light"||t==="dark")d.dataset.theme=t;if(localStorage.getItem("primum-sidebar")==="collapsed")d.dataset.sidebar="collapsed"}catch(e){}`;
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${stix.variable} ${plexSans.variable} ${plexMono.variable}`} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: prePaint }} />
       </head>
       <body className="font-sans text-ink antialiased">
         <a
@@ -61,10 +64,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           Skip to content
         </a>
         <ApiProvider>
-          <Masthead />
-          <main id="main" className="mx-auto w-full max-w-[1320px] px-4 pb-24 pt-6 sm:px-6 lg:px-8 lg:pt-8">
+          <AppShell sidebar={<AppSidebar />} topBar={<TopBar />}>
             {children}
-          </main>
+          </AppShell>
         </ApiProvider>
       </body>
     </html>

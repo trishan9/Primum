@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { citedIndices, parseInline, parseMarkdown } from "./markdown.ts";
+import { citedIndices, groupCitations, parseInline, parseMarkdown } from "./markdown.ts";
 
 test("citation markers become cite nodes", () => {
   assert.deepEqual(parseInline("Aspirin lowers risk [1][3]."), [
@@ -39,4 +39,27 @@ test("angle brackets stay plain text", () => {
 
 test("a bracketed year or word is not a citation", () => {
   assert.deepEqual(citedIndices("See [note] and [2024] and [12]"), [12]);
+});
+
+test("adjacent citations group with the word before them", () => {
+  assert.deepEqual(groupCitations(parseInline("Aspirin lowers risk [1][3].")), [
+    { kind: "text", text: "Aspirin lowers " },
+    { kind: "cites", lead: "risk", ns: [1, 3] },
+    { kind: "text", text: "." },
+  ]);
+});
+
+test("whitespace between a citation and punctuation is dropped", () => {
+  assert.deepEqual(groupCitations(parseInline("over ten years [3] . Next")), [
+    { kind: "text", text: "over ten " },
+    { kind: "cites", lead: "years", ns: [3] },
+    { kind: "text", text: ". Next" },
+  ]);
+});
+
+test("a citation at the start of a line has no lead", () => {
+  assert.deepEqual(groupCitations(parseInline("[2] then text")), [
+    { kind: "cites", lead: "", ns: [2] },
+    { kind: "text", text: " then text" },
+  ]);
 });

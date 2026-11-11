@@ -22,3 +22,6 @@ web/node_modules/
 web/.next/
 web/out/
 .DS_Store
+
+# Playwright CLI session logs and snapshots
+.playwright-cli/

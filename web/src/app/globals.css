@@ -1,30 +1,46 @@
 @import "tailwindcss";
 
 /*
-  Primum design tokens.
-  Chrome is achromatic. Colour is spent in three places only: the one data hue
-  (the confidence reading and the lead series of a chart), the three claim
-  verdicts, and the emergency state. See DESIGN.md for the reasons.
+  Primum design tokens. See DESIGN.md for the reasons behind each one.
+
+  Three surfaces, one tone step apart, no shadow at rest:
+    --chrome   the frame: sidebar and top bar, one tinted L with no rule between them
+    --ground   the sheet the views draw on (inset from the window on wide screens)
+    --surface  cards and panels on the sheet
+  Colour is spent in three places only: the one accent (the confidence reading, the lead
+  series of a chart, the selected state of a control, focus), the three claim verdicts, and
+  the emergency state. Abstention is neutral and hatched, never red.
 */
 
 :root {
   color-scheme: light;
 
-  --ground: #f3f5f4;
+  /* surfaces: a cool green-grey taken from the clinic, not from a SaaS kit */
+  --chrome: #eef1ef;
+  --ground: #f9fbfa;
   --surface: #ffffff;
-  --raised: #eaedeb;
-  --border: #dfe3e1;
-  --rule: #ebeeec;
-  --control: #8b918e;
-  --text: #111413;
-  --muted: #555b58;
-  --faint: #666c69;
-  --primary: #151817;
+  --raised: #f1f4f2;
+  --active: #e2e7e4;
+  --border: #e1e6e3;
+  --rule: #ecefed;
+  --control: #868d89;
+  --frame: #c3c9c5;
+
+  /* ink, three tiers, each at 4.5:1 or more on --ground, --surface and --chrome */
+  --text: #111614;
+  --muted: #545b57;
+  --faint: #5f6662;
+  --primary: #121715;
   --on-primary: #ffffff;
 
-  --accent: #2a78d6;
-  --link: #1c5cab;
+  /* the one accent: petrol. 6:1 on white */
+  --accent: #1d6a87;
+  --accent-soft: #e4f0f4;
+  --accent-ink: #11475b;
+  --on-accent: #ffffff;
+  --link: #185a74;
 
+  /* verdicts and the emergency state */
   --supported: #1d6b40;
   --supported-bg: #def4e5;
   --supported-ink: #0b3a20;
@@ -34,38 +50,64 @@
   --contradicted: #b0241c;
   --contradicted-bg: #fde7e3;
   --contradicted-ink: #76150f;
+  --emergency: var(--contradicted);
+  --emergency-bg: var(--contradicted-bg);
+  --emergency-ink: var(--contradicted-ink);
 
-  --hatch: #a3a9a6;
-  --frame: #c3c8c5;
+  /* data */
+  --hatch: #8a908d;
   --grid: #e4e7e5;
   --axis: #b9bfbc;
-  --series-1: #2a78d6;
-  --series-2: #eb6834;
-  --series-3: #1baf7a;
-  --series-4: #eda100;
-  --series-rest: #8b918e;
+  --series-1: var(--accent);
+  --series-2: #c2551f;
+  --series-3: #1b8f66;
+  --series-4: #a86f0c;
+  --series-rest: #868d89;
 
-  --shadow-float: 0 8px 24px rgb(17 20 19 / 0.12), 0 1px 2px rgb(17 20 19 / 0.08);
+  /* elevation: only what floats casts a shadow */
+  --shadow-float: 0 12px 32px rgb(17 22 20 / 0.12), 0 2px 6px rgb(17 22 20 / 0.06);
+  --shadow-control: 0 1px 2px rgb(17 22 20 / 0.06);
+  /* the docked composer: one soft layer, enough to lift it off the thread running under it */
+  --shadow-dock: 0 6px 16px -6px rgb(17 22 20 / 0.16);
+
+  /* layout */
+  --sidebar-w: 15rem;
+  --sidebar-w-collapsed: 4.25rem;
+  --topbar-h: 3.25rem;
+  --sheet-inset: 0.5rem;
+
+  /* motion */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur: 180ms;
+  --dur-slow: 280ms;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
 
-    --ground: #0d0e0e;
-    --surface: #161717;
-    --raised: #202222;
-    --border: #2b2e2d;
-    --rule: #212423;
-    --control: #737876;
-    --text: #f1f3f2;
-    --muted: #b4b8b6;
-    --faint: #969a98;
-    --primary: #f1f3f2;
-    --on-primary: #0d0e0e;
+    --chrome: #0b0c0c;
+    --ground: #111312;
+    --surface: #161918;
+    --raised: #1e2120;
+    --active: #232726;
+    --border: #272b2a;
+    --rule: #1f2221;
+    --control: #6a716e;
+    --frame: #3a3f3d;
 
-    --accent: #3987e5;
-    --link: #86b6ef;
+    --text: #eef1f0;
+    --muted: #b0b6b3;
+    --faint: #8d9491;
+    --primary: #eef1f0;
+    --on-primary: #0b0c0c;
+
+    --accent: #4fa6cc;
+    --accent-soft: #132a33;
+    --accent-ink: #a9d6ea;
+    --on-accent: #0b0c0c;
+    --link: #8ec8e2;
 
     --supported: #5fcf8e;
     --supported-bg: #14291d;
@@ -77,37 +119,44 @@
     --contradicted-bg: #321a18;
     --contradicted-ink: #f6aaa3;
 
-    --hatch: #5a5f5d;
-    --frame: #3a3d3c;
+    --hatch: #6f7572;
     --grid: #262929;
     --axis: #4a4e4c;
-    --series-1: #3987e5;
-    --series-2: #d95926;
-    --series-3: #199e70;
-    --series-4: #c98500;
-    --series-rest: #737876;
+    --series-2: #e07040;
+    --series-3: #2fb585;
+    --series-4: #d29a2a;
+    --series-rest: #6a716e;
 
-    --shadow-float: 0 8px 24px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-float: 0 12px 32px rgb(0 0 0 / 0.55), 0 2px 6px rgb(0 0 0 / 0.4);
+    --shadow-control: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-dock: 0 6px 16px -6px rgb(0 0 0 / 0.7);
   }
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --ground: #0d0e0e;
-  --surface: #161717;
-  --raised: #202222;
-  --border: #2b2e2d;
-  --rule: #212423;
-  --control: #737876;
-  --text: #f1f3f2;
-  --muted: #b4b8b6;
-  --faint: #969a98;
-  --primary: #f1f3f2;
-  --on-primary: #0d0e0e;
+  --chrome: #0b0c0c;
+  --ground: #111312;
+  --surface: #161918;
+  --raised: #1e2120;
+  --active: #232726;
+  --border: #272b2a;
+  --rule: #1f2221;
+  --control: #6a716e;
+  --frame: #3a3f3d;
 
-  --accent: #3987e5;
-  --link: #86b6ef;
+  --text: #eef1f0;
+  --muted: #b0b6b3;
+  --faint: #8d9491;
+  --primary: #eef1f0;
+  --on-primary: #0b0c0c;
+
+  --accent: #4fa6cc;
+  --accent-soft: #132a33;
+  --accent-ink: #a9d6ea;
+  --on-accent: #0b0c0c;
+  --link: #8ec8e2;
 
   --supported: #5fcf8e;
   --supported-bg: #14291d;
@@ -119,32 +168,38 @@
   --contradicted-bg: #321a18;
   --contradicted-ink: #f6aaa3;
 
-  --hatch: #5a5f5d;
-  --frame: #3a3d3c;
+  --hatch: #6f7572;
   --grid: #262929;
   --axis: #4a4e4c;
-  --series-1: #3987e5;
-  --series-2: #d95926;
-  --series-3: #199e70;
-  --series-4: #c98500;
-  --series-rest: #737876;
+  --series-2: #e07040;
+  --series-3: #2fb585;
+  --series-4: #d29a2a;
+  --series-rest: #6a716e;
 
-  --shadow-float: 0 8px 24px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-float: 0 12px 32px rgb(0 0 0 / 0.55), 0 2px 6px rgb(0 0 0 / 0.4);
+  --shadow-control: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-dock: 0 6px 16px -6px rgb(0 0 0 / 0.7);
 }
 
 @theme inline {
+  --color-chrome: var(--chrome);
   --color-ground: var(--ground);
   --color-surface: var(--surface);
   --color-raised: var(--raised);
+  --color-active: var(--active);
   --color-line: var(--border);
   --color-rule: var(--rule);
   --color-control: var(--control);
+  --color-frame: var(--frame);
   --color-ink: var(--text);
   --color-muted: var(--muted);
   --color-faint: var(--faint);
   --color-primary: var(--primary);
   --color-on-primary: var(--on-primary);
   --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-on-accent: var(--on-accent);
   --color-link: var(--link);
   --color-supported: var(--supported);
   --color-supported-bg: var(--supported-bg);
@@ -155,24 +210,44 @@
   --color-contradicted: var(--contradicted);
   --color-contradicted-bg: var(--contradicted-bg);
   --color-contradicted-ink: var(--contradicted-ink);
+  --color-emergency: var(--emergency);
+  --color-emergency-bg: var(--emergency-bg);
+  --color-emergency-ink: var(--emergency-ink);
   --color-hatch: var(--hatch);
 
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-stix), "STIX Two Text", Georgia, serif;
   --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
 
-  --radius-card: 8px;
-  --radius-control: 6px;
-  --radius-chip: 4px;
+  /* type scale: Tailwind's xs 12 / sm 14 / base 16 are kept; plus four named
+     steps: meta 13 (secondary lines), reading 19 (serif prose), title 22 (page h1), kpi 28 (figures) */
+  --text-meta: 0.8125rem;
+  --text-meta--line-height: 1.125rem;
+  --text-reading: 1.1875rem;
+  --text-reading--line-height: 1.6;
+  --text-title: 1.375rem;
+  --text-title--line-height: 1.75rem;
+  --text-kpi: 1.75rem;
+  --text-kpi--line-height: 2.125rem;
+
+  /* radius steps down as things nest: sheet 16, card 12, control 8, chip 6 */
+  --radius-sheet: 16px;
+  --radius-card: 12px;
+  --radius-control: 8px;
+  --radius-chip: 6px;
 
   --shadow-float: var(--shadow-float);
+  --shadow-control: var(--shadow-control);
+  --shadow-dock: var(--shadow-dock);
+
+  --ease-out: var(--ease-out);
 
   --breakpoint-xs: 26rem;
 }
 
 @layer base {
   html {
-    background: var(--ground);
+    background: var(--chrome);
     color: var(--text);
     font-family: var(--font-sans);
     font-size: 16px;
@@ -180,24 +255,27 @@
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
     scrollbar-color: var(--control) transparent;
-    scroll-padding-top: 5rem;
+    scroll-padding-top: calc(var(--topbar-h) + 1rem);
+    /* The Ask view publishes its docked composer's height here, so focus and scrolled-to cards
+       come to rest above the composer, never under it (WCAG 2.4.11). */
+    scroll-padding-bottom: calc(var(--composer-h, 0px) + 1rem);
   }
 
   body {
     min-height: 100dvh;
-    background: var(--ground);
+    background: var(--chrome);
     font-feature-settings: "kern", "liga";
   }
 
   ::selection {
     background: var(--accent);
-    color: #ffffff;
+    color: var(--on-accent);
   }
 
   :focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
-    border-radius: 2px;
+    border-radius: 4px;
   }
 
   input,
@@ -208,6 +286,7 @@
 
   button,
   [role="button"],
+  [role="tab"],
   summary,
   select,
   label[for] {
@@ -246,7 +325,7 @@
     font-variant-numeric: tabular-nums lining-nums;
   }
 
-  /* Reading text: what the instrument says in prose, set in the face scientific journals use. */
+  /* Reading text: what the system says in prose, set in the face scientific journals use. */
   .reading {
     font-family: var(--font-serif);
     font-size: 1.1875rem;
@@ -295,6 +374,98 @@
     color: var(--link);
     text-decoration: underline;
   }
+
+  /* A horizontal scroller with more to show fades out at its trailing edge. */
+  .scroll-fade[data-more] {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+  }
+
+  /* ---------- App shell ---------- */
+
+  /* Sidebar width follows html[data-sidebar], stamped before first paint, so collapsing
+     never shifts the layout after hydration. */
+  .app-sidebar {
+    width: var(--sidebar-w);
+  }
+  :root[data-sidebar="collapsed"] .app-sidebar {
+    width: var(--sidebar-w-collapsed);
+  }
+
+  /* In the collapsed rail a label stays in the accessibility tree but leaves the screen;
+     its tooltip appears on hover and on keyboard focus. */
+  :root[data-sidebar="collapsed"] .app-sidebar [data-rail-hide] {
+    display: none;
+  }
+  .app-sidebar [data-rail-only] {
+    display: none;
+  }
+  :root[data-sidebar="collapsed"] .app-sidebar [data-rail-only] {
+    display: flex;
+  }
+  :root[data-sidebar="collapsed"] .app-sidebar [data-rail-label] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  :root[data-sidebar="collapsed"] .app-sidebar [data-rail-center] {
+    justify-content: center;
+    padding-inline: 0;
+  }
+  .app-sidebar [data-tip] {
+    position: relative;
+  }
+  /* Esc hides the tooltip until the pointer or focus moves again (WCAG 1.4.13). */
+  :root[data-sidebar="collapsed"]:not([data-tips="off"]) .app-sidebar [data-tip]:hover::after,
+  :root[data-sidebar="collapsed"]:not([data-tips="off"]) .app-sidebar [data-tip]:focus-visible::after {
+    content: attr(data-tip);
+    position: absolute;
+    left: calc(100% + 10px);
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 50;
+    white-space: nowrap;
+    border-radius: var(--radius-chip);
+    background: var(--primary);
+    color: var(--on-primary);
+    padding: 4px 8px;
+    font-size: 0.8125rem;
+    line-height: 1.125rem;
+    font-weight: 500;
+    box-shadow: var(--shadow-float);
+    pointer-events: none;
+  }
+
+  /* The mobile navigation sheet: a native modal dialog, so focus is trapped and Esc closes it. */
+  .nav-sheet {
+    margin: 0;
+    max-height: none;
+    height: 100dvh;
+    width: min(20rem, 88vw);
+    max-width: none;
+    border: 0;
+    padding: 0;
+    background: var(--chrome);
+    color: var(--text);
+  }
+  .nav-sheet[open] {
+    animation: sheet-in var(--dur-slow) var(--ease-out);
+  }
+  .nav-sheet::backdrop {
+    background: rgb(0 0 0 / 0.4);
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 
 @keyframes caret-blink {
@@ -314,6 +485,17 @@
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* A flat placeholder that breathes; never a shimmer gradient. */
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
   }
 }
 

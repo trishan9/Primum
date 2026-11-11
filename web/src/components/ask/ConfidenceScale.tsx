@@ -35,7 +35,9 @@ export function ConfidenceScale({ p, threshold, alpha, answered }: ConfidenceSca
   const pointer = p === null ? null : clamp01(p);
 
   const summary = [
-    pointer === null ? "Confidence not computed yet." : `Calibrated probability of a correct answer: ${fmtProb(pointer)}.`,
+    pointer === null
+      ? "Confidence not computed yet."
+      : `Calibrated probability of a correct answer: ${fmtProb(pointer)}.`,
     hasGate
       ? `Certified threshold for alpha ${fmtAlpha(alpha)}: ${fmtProb(gate)}.`
       : `No threshold certifies alpha ${fmtAlpha(alpha)}.`,
@@ -60,30 +62,39 @@ export function ConfidenceScale({ p, threshold, alpha, answered }: ConfidenceSca
         )}
       </div>
 
-      <div className="relative h-7 rounded-[3px] border border-control bg-surface">
+      <div className="relative h-4 rounded-full bg-accent-soft ring-1 ring-inset ring-line">
         <div
-          className="absolute inset-y-0 left-0 overflow-hidden rounded-l-[2px] bg-raised"
+          className="absolute inset-y-0 left-0 overflow-hidden rounded-l-full bg-raised ring-1 ring-inset ring-line"
           style={{ width: `${(noneCertified ? 1 : (gate ?? 0)) * 100}%` }}
         >
           <div className="hatch absolute inset-0" />
         </div>
         {gate !== null ? (
-          <div className="absolute -bottom-1.5 -top-1.5 w-0.5 -translate-x-1/2 bg-ink" style={{ left: `${gate * 100}%` }} />
+          <div
+            className="absolute -bottom-2 -top-2 w-0 -translate-x-1/2 border-l-2 border-dashed border-ink"
+            style={{ left: `${gate * 100}%` }}
+          />
         ) : null}
         {pointer !== null ? (
           <div
-            className="absolute -bottom-px -top-2 -translate-x-1/2 transition-[left] duration-700 ease-out"
+            className="absolute -bottom-1 -top-2.5 -translate-x-1/2 transition-[left] duration-700 ease-out"
             style={{ left: `${pointer * 100}%` }}
           >
-            <svg aria-hidden="true" width="13" height="8" viewBox="0 0 13 8" className="absolute -top-px left-1/2 -translate-x-1/2">
+            <svg
+              aria-hidden="true"
+              width="13"
+              height="8"
+              viewBox="0 0 13 8"
+              className="absolute -top-px left-1/2 -translate-x-1/2"
+            >
               <path d="M0 0h13L6.5 8Z" fill={answered === false ? "var(--text)" : "var(--accent)"} />
             </svg>
-            <div className={`h-full w-[3px] ${answered === false ? "bg-ink" : "bg-accent"}`} />
+            <div className={`h-full w-[3px] rounded-full ${answered === false ? "bg-ink" : "bg-accent"}`} />
           </div>
         ) : null}
       </div>
 
-      <div className="relative h-6 text-xs text-muted">
+      <div className="relative mt-1.5 h-6 text-xs text-muted">
         {TICKS.map((tick, i) => (
           <div key={tick} className="absolute top-0" style={{ left: `${tick * 100}%` }}>
             <div className={`w-px bg-control ${i % 2 === 0 ? "h-1.5" : "h-1"}`} />

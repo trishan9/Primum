@@ -175,3 +175,9 @@ test("readUnmeasured lists the features and feature sets RQ2 dropped", () => {
   });
   assert.deepEqual(readUnmeasured({ meta: {} }), { features: [], featureSets: [] });
 });
+
+test("a bare p-value column reads p, not p vs value", () => {
+  assert.equal(metricLabel("p_value"), "p");
+  assert.equal(metricLabel("tests.p_value"), "p");
+  assert.equal(metricLabel("p_vs_bm25"), "p vs bm25");
+});

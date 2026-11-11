@@ -1,6 +1,8 @@
 "use client";
 
-import { Button, Code, EmptyBlock } from "@/components/ui/controls";
+import { Button } from "@/components/ui/button";
+import { Code } from "@/components/ui/code";
+import { EmptyBlock } from "@/components/ui/empty-state";
 import { API_URL } from "@/lib/api";
 
 import { useApi } from "./ApiProvider";

@@ -99,7 +99,7 @@ const HITS: Hit[] = [
     "dietary fibre and bowel habits",
     "Higher fibre intake was associated with more regular bowel habits in this invented survey. The survey did not measure cancer outcomes.",
     null,
-    { dense: 0.61, dense_rank: 4, rrf: 0.0156 },
+    { bm25: 3.1, dense: 0.61, dense_rank: 4, rrf: 0.0156 },
   ),
 ];
 

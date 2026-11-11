@@ -14,15 +14,26 @@ export type Loaded<T> =
   | { status: "down" }
   | { status: "error"; message: string };
 
-/** Loads one resource, and loads it again when the API comes back after being unreachable. */
-export function useLoaded<T>(load: (signal: AbortSignal) => Promise<T>, key: string): Loaded<T> {
+type Arg = string | number;
+
+/**
+ * Loads one resource, and loads it again when the API comes back after being unreachable.
+ * The loader's inputs are passed as data (`args`), so the request is keyed by exactly what it
+ * depends on: a loader cannot close over a value the key does not include. Pass a stable,
+ * module-level `fetcher`.
+ */
+export function useLoaded<A extends readonly Arg[], T>(
+  fetcher: (signal: AbortSignal, ...args: A) => Promise<T>,
+  args: A,
+): Loaded<T> {
   const { reachability } = useApi();
   const [state, setState] = useState<{ key: string; value: Loaded<T> }>({ key: "", value: { status: "loading" } });
+  const key = JSON.stringify(args);
   const attempt = `${key}:${reachability === "up" ? "up" : "other"}`;
 
   useEffect(() => {
     const abort = new AbortController();
-    load(abort.signal)
+    fetcher(abort.signal, ...(JSON.parse(key) as A))
       .then((data) => {
         if (!abort.signal.aborted) setState({ key: attempt, value: { status: "ready", data } });
       })
@@ -37,14 +48,14 @@ export function useLoaded<T>(load: (signal: AbortSignal) => Promise<T>, key: str
         setState({ key: attempt, value });
       });
     return () => abort.abort();
-    // `load` is recreated every render by callers; `attempt` is what identifies a new request.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [attempt]);
+  }, [fetcher, key, attempt]);
 
   return state.key === attempt ? state.value : { status: "loading" };
 }
 
+const fetchExperiment = (signal: AbortSignal, name: ExperimentName, run: string) => getExperiment(name, signal, run);
+
 /** One results file of a run; without `run`, the main run. */
 export function useExperiment(name: ExperimentName, run: string = MAIN_RUN): Loaded<unknown> {
-  return useLoaded((signal) => getExperiment(name, signal, run), `${run}/${name}`);
+  return useLoaded(fetchExperiment, [name, run] as const);
 }

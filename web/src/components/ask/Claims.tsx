@@ -1,16 +1,13 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { CheckGlyph, CrossGlyph, RingGlyph } from "@/components/ui/glyphs";
 import { fmtProb } from "@/lib/format";
 import type { ClaimVerdict, VerdictLabel } from "@/lib/types";
 
 import { VERDICT_COPY } from "./copy";
-
-const VERDICT_STYLE: Record<VerdictLabel, string> = {
-  supported: "bg-supported-bg text-supported-ink",
-  unsupported: "bg-unsupported-bg text-unsupported-ink",
-  contradicted: "bg-contradicted-bg text-contradicted-ink",
-};
+import { VerdictBar } from "./VerdictBar";
 
 function VerdictGlyph({ label }: { label: VerdictLabel }) {
   if (label === "supported") return <CheckGlyph size={13} />;
@@ -18,14 +15,12 @@ function VerdictGlyph({ label }: { label: VerdictLabel }) {
   return <RingGlyph size={13} />;
 }
 
-export function VerdictTag({ label }: { label: VerdictLabel }) {
+function VerdictTag({ label }: { label: VerdictLabel }) {
   return (
-    <span
-      className={`inline-flex h-6 shrink-0 items-center gap-1 whitespace-nowrap rounded-chip px-1.5 text-xs font-medium ${VERDICT_STYLE[label]}`}
-    >
+    <Badge tone={label}>
       <VerdictGlyph label={label} />
       {VERDICT_COPY[label].label}
-    </span>
+    </Badge>
   );
 }
 
@@ -40,7 +35,9 @@ function NliBar({ verdict }: { verdict: ClaimVerdict }) {
     <div className="num flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
       <div className="flex h-1.5 w-24 gap-0.5 overflow-hidden rounded-full" aria-hidden="true">
         {parts.map((part) =>
-          part.value > 0.005 ? <span key={part.key} className={part.className} style={{ width: `${part.value * 100}%` }} /> : null,
+          part.value > 0.005 ? (
+            <span key={part.key} className={part.className} style={{ width: `${part.value * 100}%` }} />
+          ) : null,
         )}
       </div>
       <span>
@@ -75,43 +72,59 @@ export function Claims({ verdicts, onInspect, onOpenPassage }: ClaimsProps) {
   };
 
   return (
-    <section aria-labelledby="claims-heading">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h3 id="claims-heading" className="text-[0.9375rem] font-semibold text-ink">
-          Claims, each checked against its source
-        </h3>
-        <p className="num text-xs text-muted">
-          {counts.supported} supported, {counts.unsupported} unsupported, {counts.contradicted} contradicted
-        </p>
-      </div>
+    <Card aria-labelledby="claims-heading">
+      <Card.Header>
+        <Card.Heading>
+          <Card.Title as="h3" id="claims-heading">
+            Claim check
+          </Card.Title>
+          <Card.Description>Each claim in the answer, checked against the passage it cites</Card.Description>
+        </Card.Heading>
+        <div className="num flex min-w-0 flex-wrap items-center gap-1.5">
+          <Badge tone="supported">
+            <CheckGlyph size={12} />
+            {counts.supported} supported
+          </Badge>
+          <Badge tone="unsupported">
+            <RingGlyph size={12} />
+            {counts.unsupported} unsupported
+          </Badge>
+          <Badge tone="contradicted">
+            <CrossGlyph size={12} />
+            {counts.contradicted} contradicted
+          </Badge>
+        </div>
+      </Card.Header>
+
+      <VerdictBar verdicts={verdicts} className="mt-3 px-4 sm:px-5" />
 
       {verdicts.length === 0 ? (
-        <p className="mt-3 text-sm text-muted">The answer made no checkable claim.</p>
+        <p className="px-4 py-4 text-sm text-muted sm:px-5">The answer made no checkable claim.</p>
       ) : (
-        <ol className="mt-2 divide-y divide-rule border-y border-rule">
+        <ol className="mt-3 divide-y divide-rule border-t border-rule">
           {verdicts.map((verdict, i) => {
             const inspect = () => onInspect(verdict.best_hit, verdict.best_sentence);
             return (
+              // Not a focus stop itself: focus reaches it through the passage button inside, which bubbles here.
               <li
-                key={i}
-                tabIndex={0}
+                key={`${verdict.claim.text}-${i}`}
                 onMouseEnter={inspect}
                 onMouseLeave={() => onInspect(null, null)}
                 onFocus={inspect}
                 onBlur={(event) => {
                   if (!event.currentTarget.contains(event.relatedTarget)) onInspect(null, null);
                 }}
-                className="group -mx-2 rounded-control px-2 py-3.5 hover:bg-ground focus-visible:bg-ground"
+                className="group px-4 py-3.5 last:rounded-b-card hover:bg-raised/60 focus-within:bg-raised/60 sm:px-5"
               >
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
-                  <div className="sm:w-[7.25rem] sm:shrink-0 sm:pt-0.5">
+                  <div className="sm:w-[7.5rem] sm:shrink-0 sm:pt-0.5">
                     <VerdictTag label={verdict.label} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="font-serif text-[1.0625rem] leading-snug text-ink">{verdict.claim.text}</p>
 
                     {verdict.best_sentence ? (
-                      <figure className="mt-2 border-l border-control pl-3">
+                      <figure className="mt-2 rounded-control bg-raised px-3 py-2">
                         <figcaption className="text-xs text-muted">
                           {VERDICT_COPY[verdict.label].sentence}
                           {verdict.best_hit ? (
@@ -127,12 +140,14 @@ export function Claims({ verdicts, onInspect, onOpenPassage }: ClaimsProps) {
                             </>
                           ) : null}
                         </figcaption>
-                        <blockquote className="mt-0.5 line-clamp-3 font-serif text-[0.9375rem] italic leading-normal text-ink group-hover:line-clamp-none group-focus-within:line-clamp-none group-focus-visible:line-clamp-none">
+                        <blockquote className="mt-0.5 line-clamp-3 font-serif text-[0.9375rem] italic leading-normal text-ink group-hover:line-clamp-none group-focus-within:line-clamp-none">
                           {verdict.best_sentence}
                         </blockquote>
                       </figure>
                     ) : (
-                      <p className="mt-2 text-xs text-muted">No sentence in the retrieved passages was close to this claim.</p>
+                      <p className="mt-2 text-xs text-muted">
+                        No sentence in the retrieved passages was close to this claim.
+                      </p>
                     )}
 
                     <div className="mt-2.5">
@@ -145,6 +160,6 @@ export function Claims({ verdicts, onInspect, onOpenPassage }: ClaimsProps) {
           })}
         </ol>
       )}
-    </section>
+    </Card>
   );
 }

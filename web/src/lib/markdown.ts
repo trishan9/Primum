@@ -120,3 +120,50 @@ export function citedIndices(source: string): number[] {
   for (const match of source.matchAll(CITE)) for (const n of expandCitation(match[1] ?? "")) seen.add(n);
   return [...seen];
 }
+
+/** An inline node as typeset: adjacent citation markers become one group that holds on to the word before it. */
+export type InlineRun = Exclude<Inline, { kind: "cite" }> | { kind: "cites"; lead: string; ns: number[] };
+
+/**
+ * Groups each run of adjacent citation markers so it can be set as one unbreakable unit with the
+ * word it follows ("cancers¹ ³." rather than "cancers 1 3 ."). The whitespace before the group, and
+ * any whitespace between the group and following punctuation, is dropped.
+ */
+export function groupCitations(nodes: readonly Inline[]): InlineRun[] {
+  const out: InlineRun[] = [];
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i]!;
+    if (node.kind !== "cite") {
+      const prev = out.at(-1);
+      if (node.kind === "text" && prev?.kind === "cites" && /^\s+[.,;:!?)\]]/.test(node.text)) {
+        out.push({ kind: "text", text: node.text.replace(/^\s+/, "") });
+      } else {
+        out.push(node);
+      }
+      continue;
+    }
+    const ns = [node.n];
+    while (i + 1 < nodes.length) {
+      const next = nodes[i + 1]!;
+      if (next.kind === "cite") {
+        ns.push(next.n);
+        i++;
+      } else if (next.kind === "text" && !next.text.trim() && nodes[i + 2]?.kind === "cite") {
+        i++;
+      } else {
+        break;
+      }
+    }
+    let lead = "";
+    const prev = out.at(-1);
+    if (prev?.kind === "text") {
+      const match = /(\S*)\s*$/.exec(prev.text);
+      lead = match?.[1] ?? "";
+      const head = prev.text.slice(0, match?.index ?? prev.text.length);
+      if (head) out[out.length - 1] = { kind: "text", text: head };
+      else out.pop();
+    }
+    out.push({ kind: "cites", lead, ns });
+  }
+  return out;
+}

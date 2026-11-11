@@ -11,3 +11,14 @@ minimumReleaseAgeExclude:
   - '@next/swc-win32-x64-msvc@16.4.6'
   - eslint-config-next@16.4.6
   - next@16.4.6
+
+# Transitive d3 modules pinned to releases at least two weeks old (the 2026-11-03 republishes
+# of the d3 family are held back until they have aged).
+overrides:
+  d3-color@3: 3.1.0
+  d3-interpolate@3: 3.0.1
+  d3-path@3: 3.1.0
+  d3-scale-chromatic@3: 3.1.0
+  d3-time@3: 3.1.0
+  d3-time-format@4: 4.1.0
+  d3-delaunay@6: 6.0.4

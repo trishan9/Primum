@@ -36,6 +36,14 @@ Node 22.18 or newer is needed for `pnpm test`, which runs the TypeScript tests d
   frames split across chunks, keep-alive comments).
 - `src/lib/ask-state.ts` is the reducer that turns events into what the Ask view shows.
   `outcomeOf()` names the result: answered, withheld, emergency, failed.
+- `src/lib/markdown.ts` parses answer text into data (never HTML); `groupCitations()` joins a run
+  of `[n]` markers to the word before it so they typeset as one unit.
+- `src/lib/motion.ts` (`scrollBehavior()`) is the one place a programmatic scroll chooses smooth
+  or instant, so reduced motion is honoured.
+- `src/components/ask/AskView.tsx` holds only the run (reducer, stream, stop) and its layout
+  slots; the empty state, reply, outcomes and composer are colocated components beside it.
+- `useLoaded(fetcher, args)` (`src/components/experiments/useExperiment.ts`) keys each request by
+  its arguments, passed as data, so a loader cannot read a value its key leaves out.
 
 Errors are specific. `no_api_key`, `budget` and `no_index` each say what stopped and which
 command or setting fixes it; an unreachable API says where it was expected.

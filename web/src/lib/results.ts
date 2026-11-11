@@ -440,6 +440,8 @@ const METRIC_NAMES: [RegExp, string][] = [
 
 export function metricLabel(key: string): string {
   for (const [pattern, label] of METRIC_NAMES) if (pattern.test(key)) return key.replace(pattern, label);
+  // A bare p-value column (`p_value`, `tests.p_value`) is "p", not "p vs value".
+  if (/^(?:tests?\.)?p[_-]?value$/i.test(key)) return "p";
   const pValue = key.match(/^(?:tests?\.)?p[_-]?(?:value[_-]?)?(?:vs[_-]?)?(.+)$/i);
   if (pValue && /p[_-]?(value|vs)/i.test(key)) return `p vs ${pValue[1]}`;
   return key.replace(/_/g, " ");
